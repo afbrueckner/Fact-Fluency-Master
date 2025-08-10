@@ -6,6 +6,8 @@ import { GameCard } from "@/components/game-card";
 import { RacingBears } from "@/components/games/racing-bears";
 import { DoublesBingo } from "@/components/games/doubles-bingo";
 import { SumWar } from "@/components/games/sum-war";
+import { Trios } from "@/components/games/trios";
+import { Salute } from "@/components/games/salute";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Game, Student } from "@shared/schema";
@@ -121,6 +123,40 @@ export default function Games() {
           <SumWar 
             onComplete={(score, accuracy, strategies) => 
               handleGameComplete("sum-war", score, accuracy, strategies)
+            }
+            onExit={handleExitGame}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (currentGame === "trios") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header student={defaultStudent} />
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Trios 
+            onComplete={(score, accuracy, strategies) => 
+              handleGameComplete("trios", score, accuracy, strategies)
+            }
+            onExit={handleExitGame}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (currentGame === "salute") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header student={defaultStudent} />
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Salute 
+            onComplete={(score, accuracy, strategies) => 
+              handleGameComplete("salute", score, accuracy, strategies)
             }
             onExit={handleExitGame}
           />
