@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TenFrame } from "@/components/ten-frame";
+import { NumberLine } from "@/components/number-line";
 
 interface SumWarProps {
   onComplete: (score: number, accuracy: number, strategies: string[]) => void;
@@ -23,6 +25,7 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
   const [playerAnswer, setPlayerAnswer] = useState("");
   const [showComputerAnswer, setShowComputerAnswer] = useState(false);
   const [gameMode, setGameMode] = useState<"addition" | "subtraction">("addition");
+  const [visualAid, setVisualAid] = useState<"none" | "tenframes" | "numberline">("tenframes");
 
   const maxRounds = 10;
 
@@ -263,6 +266,40 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
               Find Missing Addend
             </button>
           </div>
+          
+          <div className="flex bg-gray-100 rounded-lg p-1 mr-3">
+            <button
+              onClick={() => setVisualAid("tenframes")}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                visualAid === "tenframes" 
+                  ? "bg-white text-gray-900 shadow-sm" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Ten Frames
+            </button>
+            <button
+              onClick={() => setVisualAid("numberline")}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                visualAid === "numberline" 
+                  ? "bg-white text-gray-900 shadow-sm" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Number Line
+            </button>
+            <button
+              onClick={() => setVisualAid("none")}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                visualAid === "none" 
+                  ? "bg-white text-gray-900 shadow-sm" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              None
+            </button>
+          </div>
+          
           <Button variant="outline" size="sm" onClick={onExit}>
             Exit Game
           </Button>
@@ -331,10 +368,36 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
               </div>
             ) : (
               <div className="w-16 h-24 bg-blue-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
-                {playerCard1 + playerCard2}
+                {playerCard1! + playerCard2!}
               </div>
             )}
           </div>
+          
+          {/* Visual aids under player cards */}
+          {visualAid === "tenframes" && playerCard1 && playerCard2 && (
+            <div className="flex justify-center space-x-8 mt-4">
+              <div className="text-center">
+                <TenFrame number={playerCard1} className="mb-1" />
+                <span className="text-xs text-gray-600">{playerCard1}</span>
+              </div>
+              {gameMode === "addition" && (
+                <div className="text-center">
+                  <TenFrame number={playerCard2} className="mb-1" />
+                  <span className="text-xs text-gray-600">{playerCard2}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {visualAid === "numberline" && playerCard1 && playerCard2 && (
+            <div className="mt-4">
+              <NumberLine
+                highlightNumbers={gameMode === "addition" ? [playerCard1, playerCard2, playerCard1 + playerCard2] : [playerCard1, playerCard1 + playerCard2]}
+                max={18}
+                className="mb-2"
+              />
+            </div>
+          )}
         </div>
 
         <div className="text-center">
@@ -360,6 +423,30 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
               )}
             </div>
           </div>
+          
+          {/* Visual aids under computer cards */}
+          {visualAid === "tenframes" && computerCard1 && computerCard2 && (
+            <div className="flex justify-center space-x-8 mt-4">
+              <div className="text-center">
+                <TenFrame number={computerCard1} className="mb-1" />
+                <span className="text-xs text-gray-600">{computerCard1}</span>
+              </div>
+              <div className="text-center">
+                <TenFrame number={computerCard2} className="mb-1" />
+                <span className="text-xs text-gray-600">{computerCard2}</span>
+              </div>
+            </div>
+          )}
+          
+          {visualAid === "numberline" && computerCard1 && computerCard2 && (
+            <div className="mt-4">
+              <NumberLine
+                highlightNumbers={[computerCard1, computerCard2, computerCard1 + computerCard2]}
+                max={18}
+                className="mb-2"
+              />
+            </div>
+          )}
         </div>
       </div>
 
