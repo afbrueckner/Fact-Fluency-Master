@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TenFrame } from "@/components/ten-frame";
+
+interface TriosBoardCell {
+  number: number;
+  covered: boolean;
+}
 
 interface TriosProps {
   onComplete: (score: number, accuracy: number, strategies: string[]) => void;
@@ -8,120 +14,185 @@ interface TriosProps {
 }
 
 export function Trios({ onComplete, onExit }: TriosProps) {
-  const [currentRound, setCurrentRound] = useState(1);
   const [score, setScore] = useState(0);
-  const [selectedCards, setSelectedCards] = useState<number[]>([]);
-  const [availableCards, setAvailableCards] = useState<number[]>([]);
-  const [targetProduct, setTargetProduct] = useState<number | null>(null);
+  const [currentCard, setCurrentCard] = useState<number | null>(null);
+  const [cardDeck, setCardDeck] = useState<number[]>([]);
+  const [deckPosition, setDeckPosition] = useState(0);
+  const [triosBoard, setTriosBoard] = useState<TriosBoardCell[]>([]);
   const [feedback, setFeedback] = useState("");
-  const [correctTrios, setCorrectTrios] = useState(0);
-  const [totalAttempts, setTotalAttempts] = useState(0);
+  const [correctSelections, setCorrectSelections] = useState(0);
+  const [totalSelections, setTotalSelections] = useState(0);
   const [gameComplete, setGameComplete] = useState(false);
   const [strategiesUsed, setStrategiesUsed] = useState<string[]>([]);
 
-  const maxRounds = 8;
-
   useEffect(() => {
-    startNewRound();
+    initializeGame();
   }, []);
 
-  const startNewRound = () => {
-    if (currentRound > maxRounds) {
-      setGameComplete(true);
-      return;
+  const initializeGame = () => {
+    // Create 5x5 board with multiples of 5 (5, 10, 15, ..., 50)
+    const multiplesOf5 = Array.from({ length: 10 }, (_, i) => (i + 1) * 5);
+    const boardNumbers: number[] = [];
+    
+    // Fill 25 spots with random multiples of 5 (allowing duplicates)
+    for (let i = 0; i < 25; i++) {
+      const randomMultiple = multiplesOf5[Math.floor(Math.random() * multiplesOf5.length)];
+      boardNumbers.push(randomMultiple);
     }
-
-    // Generate multiplication problems focusing on 2s, 5s, and 10s
-    const baseNumbers = [2, 5, 10];
-    const multipliers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     
-    const baseNum = baseNumbers[Math.floor(Math.random() * baseNumbers.length)];
-    const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
-    const product = baseNum * multiplier;
+    const board = boardNumbers.map(number => ({
+      number,
+      covered: false
+    }));
     
-    setTargetProduct(product);
+    setTriosBoard(board);
     
-    // Create available cards: include correct factors and some distractors
-    const cards = [baseNum, multiplier];
-    
-    // Add distractors
-    while (cards.length < 8) {
-      const distractor = Math.floor(Math.random() * 12) + 1;
-      if (!cards.includes(distractor)) {
-        cards.push(distractor);
+    // Create shuffled deck of 40 cards (4 copies of numbers 1-10)
+    const deck: number[] = [];
+    for (let num = 1; num <= 10; num++) {
+      for (let copy = 0; copy < 4; copy++) {
+        deck.push(num);
       }
     }
     
-    setAvailableCards(cards.sort(() => Math.random() - 0.5));
-    setSelectedCards([]);
-    setFeedback("");
-  };
-
-  const handleCardClick = (card: number) => {
-    if (selectedCards.includes(card)) {
-      setSelectedCards(selectedCards.filter(c => c !== card));
-    } else if (selectedCards.length < 3) {
-      setSelectedCards([...selectedCards, card]);
+    // Shuffle the deck
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    
+    setCardDeck(deck);
+    setDeckPosition(0);
+    
+    // Draw first card
+    if (deck.length > 0) {
+      setCurrentCard(deck[0]);
     }
   };
 
-  const handleSubmitTrio = () => {
-    if (selectedCards.length !== 3) return;
-
-    setTotalAttempts(totalAttempts + 1);
-    
-    // Check if any two cards multiply to the target product
-    const [a, b, c] = selectedCards.sort((x, y) => x - y);
-    let isCorrect = false;
-    let strategyUsed = "";
-    
-    if (a * b === targetProduct || a * c === targetProduct || b * c === targetProduct) {
-      isCorrect = true;
-      
-      // Determine strategy used
-      if (selectedCards.includes(2)) {
-        strategyUsed = "doubling (×2)";
-      } else if (selectedCards.includes(5)) {
-        strategyUsed = "counting by 5s (×5)";
-      } else if (selectedCards.includes(10)) {
-        strategyUsed = "counting by 10s (×10)";
-      } else {
-        strategyUsed = "multiplication";
+  const checkForThreeInARow = (board: TriosBoardCell[]): boolean => {
+    // Check rows
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col <= 2; col++) {
+        if (board[row * 5 + col].covered && 
+            board[row * 5 + col + 1].covered && 
+            board[row * 5 + col + 2].covered) {
+          return true;
+        }
       }
-      
-      setStrategiesUsed([...strategiesUsed, strategyUsed]);
-      setScore(score + 15);
-      setCorrectTrios(correctTrios + 1);
-      setFeedback(`Excellent! You found the trio that makes ${targetProduct}!`);
-      
-      setTimeout(() => {
-        setCurrentRound(currentRound + 1);
-        startNewRound();
-      }, 2500);
+    }
+    
+    // Check columns
+    for (let col = 0; col < 5; col++) {
+      for (let row = 0; row <= 2; row++) {
+        if (board[row * 5 + col].covered && 
+            board[(row + 1) * 5 + col].covered && 
+            board[(row + 2) * 5 + col].covered) {
+          return true;
+        }
+      }
+    }
+    
+    // Check diagonals (top-left to bottom-right)
+    for (let row = 0; row <= 2; row++) {
+      for (let col = 0; col <= 2; col++) {
+        if (board[row * 5 + col].covered && 
+            board[(row + 1) * 5 + col + 1].covered && 
+            board[(row + 2) * 5 + col + 2].covered) {
+          return true;
+        }
+      }
+    }
+    
+    // Check diagonals (top-right to bottom-left)
+    for (let row = 0; row <= 2; row++) {
+      for (let col = 2; col < 5; col++) {
+        if (board[row * 5 + col].covered && 
+            board[(row + 1) * 5 + col - 1].covered && 
+            board[(row + 2) * 5 + col - 2].covered) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  };
+
+  const drawNextCard = () => {
+    if (deckPosition + 1 < cardDeck.length) {
+      setDeckPosition(deckPosition + 1);
+      setCurrentCard(cardDeck[deckPosition + 1]);
     } else {
-      setFeedback(`Not quite. Try finding three numbers where two multiply to ${targetProduct}.`);
-      
-      setTimeout(() => {
-        setFeedback("");
-      }, 2000);
+      setGameComplete(true);
     }
+  };
+
+  const handleSkip = () => {
+    setFeedback("Card skipped!");
+    setTimeout(() => {
+      setFeedback("");
+      drawNextCard();
+    }, 1000);
+  };
+
+  const handleBoardClick = (index: number) => {
+    if (!currentCard || feedback !== "" || triosBoard[index].covered) return;
+    
+    const targetProduct = currentCard * 5;
+    const selectedNumber = triosBoard[index].number;
+    
+    setTotalSelections(totalSelections + 1);
+    
+    if (selectedNumber === targetProduct) {
+      const newBoard = [...triosBoard];
+      newBoard[index].covered = true;
+      setTriosBoard(newBoard);
+      
+      setScore(score + 10);
+      setCorrectSelections(correctSelections + 1);
+      setFeedback(`Correct! ${currentCard} × 5 = ${targetProduct}`);
+      
+      setStrategiesUsed([...strategiesUsed, "counting by 5s (×5)"]);
+      
+      // Check for three in a row
+      if (checkForThreeInARow(newBoard)) {
+        setScore(score + 50); // Bonus for three in a row
+        setFeedback("THREE IN A ROW! You won! +50 bonus points!");
+        setTimeout(() => {
+          setGameComplete(true);
+        }, 2500);
+        return;
+      }
+    } else {
+      setFeedback(`Not quite. ${currentCard} × 5 = ${targetProduct}, not ${selectedNumber}`);
+    }
+
+    // Draw next card after short delay (only if game isn't complete)
+    setTimeout(() => {
+      if (!gameComplete) {
+        setFeedback("");
+        drawNextCard();
+      }
+    }, 2000);
   };
 
   const handleComplete = () => {
-    const accuracy = totalAttempts > 0 ? Math.round((correctTrios / totalAttempts) * 100) : 0;
+    const accuracy = totalSelections > 0 ? Math.round((correctSelections / totalSelections) * 100) : 0;
     const uniqueStrategies = Array.from(new Set(strategiesUsed));
     onComplete(score, accuracy, uniqueStrategies);
   };
 
   if (gameComplete) {
-    const accuracy = totalAttempts > 0 ? Math.round((correctTrios / totalAttempts) * 100) : 0;
+    const accuracy = totalSelections > 0 ? Math.round((correctSelections / totalSelections) * 100) : 0;
 
     return (
       <div className="bg-white rounded-xl shadow-lg p-8 text-center max-w-2xl mx-auto">
         <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <span className="text-white text-3xl">🎲</span>
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Trios Complete!</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          {triosBoard.some(cell => cell.covered) && checkForThreeInARow(triosBoard) ? "THREE IN A ROW! You Won!" : "Game Complete!"}
+        </h2>
         
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           <div className="bg-blue-50 rounded-lg p-4">
@@ -133,8 +204,8 @@ export function Trios({ onComplete, onExit }: TriosProps) {
             <p className="text-sm text-green-700">Accuracy</p>
           </div>
           <div className="bg-purple-50 rounded-lg p-4">
-            <p className="text-2xl font-bold text-purple-600">{correctTrios}</p>
-            <p className="text-sm text-purple-700">Correct Trios</p>
+            <p className="text-2xl font-bold text-purple-600">{correctSelections}</p>
+            <p className="text-sm text-purple-700">Correct Answers</p>
           </div>
         </div>
 
@@ -170,7 +241,7 @@ export function Trios({ onComplete, onExit }: TriosProps) {
           <span className="text-3xl">🎲</span>
           <div>
             <h2 className="text-xl font-bold text-gray-800">Trios</h2>
-            <p className="text-sm text-gray-600">Find three numbers where two multiply to make the target</p>
+            <p className="text-sm text-gray-600">Find the product of the card × 5</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={onExit}>
@@ -180,84 +251,71 @@ export function Trios({ onComplete, onExit }: TriosProps) {
 
       <div className="text-center mb-6">
         <div className="flex justify-center items-center space-x-4 mb-4">
-          <span className="text-lg font-semibold text-gray-600">Round {currentRound} of {maxRounds}</span>
+          <span className="text-lg font-semibold text-gray-600">Card {deckPosition + 1} of {cardDeck.length}</span>
           <div className="w-px h-6 bg-gray-300"></div>
           <span className="text-lg font-semibold text-gray-600">Score: {score}</span>
         </div>
         
-        {targetProduct && (
+        {currentCard && (
           <div className="bg-primary-50 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Target Product</h3>
-            <div className="text-4xl font-bold text-primary-600">{targetProduct}</div>
-            <p className="text-sm text-gray-600 mt-2">
-              Find three numbers where two of them multiply to make {targetProduct}
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Current Card</h3>
+            <div className="flex justify-center mb-4">
+              <TenFrame number={currentCard} className="text-2xl" />
+            </div>
+            <p className="text-sm text-gray-600">
+              Find {currentCard} × 5 on the board
             </p>
           </div>
         )}
       </div>
 
-      {/* Available Cards */}
+      {/* Game Board */}
       <div className="mb-6">
-        <h3 className="font-semibold text-gray-800 mb-4 text-center">Available Numbers</h3>
-        <div className="grid grid-cols-4 gap-3 max-w-md mx-auto">
-          {availableCards.map((card, index) => (
+        <h3 className="font-semibold text-gray-800 mb-4 text-center">Trios Board</h3>
+        <div className="grid grid-cols-5 gap-2 max-w-md mx-auto">
+          {triosBoard.map((cell, index) => (
             <button
               key={index}
-              onClick={() => handleCardClick(card)}
-              className={`aspect-square text-2xl font-bold rounded-lg border-2 transition-all ${
-                selectedCards.includes(card)
-                  ? "bg-primary-500 text-white border-primary-600 transform scale-105"
+              onClick={() => handleBoardClick(index)}
+              className={`aspect-square text-lg font-bold rounded-lg border-2 transition-all ${
+                cell.covered
+                  ? "bg-green-500 text-white border-green-600"
                   : "bg-white text-gray-800 border-gray-300 hover:border-primary-500 hover:bg-primary-50"
               }`}
-              disabled={feedback !== ""}
+              disabled={feedback !== "" || cell.covered}
             >
-              {card}
+              {cell.covered ? "✓" : cell.number}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Selected Cards */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-gray-800 mb-4 text-center">Your Trio</h3>
-        <div className="flex justify-center space-x-4 mb-4">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className={`w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center text-2xl font-bold ${
-                selectedCards[index]
-                  ? "bg-primary-100 border-primary-300 text-primary-800"
-                  : "bg-gray-50 border-gray-300 text-gray-400"
-              }`}
-            >
-              {selectedCards[index] || "?"}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Feedback and Submit */}
+      {/* Feedback */}
       {feedback && (
         <div className={`p-4 rounded-lg text-center mb-6 ${
-          feedback.includes("Excellent") ? "bg-green-50 border border-green-200 text-green-800" :
+          feedback.includes("Correct") || feedback.includes("THREE IN A ROW") ? "bg-green-50 border border-green-200 text-green-800" :
+          feedback.includes("skipped") ? "bg-blue-50 border border-blue-200 text-blue-800" :
           "bg-red-50 border border-red-200 text-red-800"
         }`}>
           {feedback}
         </div>
       )}
 
-      <div className="text-center">
-        <Button 
-          onClick={handleSubmitTrio}
-          disabled={selectedCards.length !== 3 || feedback !== ""}
-          className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-3"
-        >
-          Check Trio
-        </Button>
-      </div>
+      {/* Skip Button */}
+      {currentCard && feedback === "" && (
+        <div className="text-center">
+          <Button 
+            onClick={handleSkip}
+            variant="outline"
+            className="bg-gray-100 hover:bg-gray-200"
+          >
+            Skip Card (not on board)
+          </Button>
+        </div>
+      )}
 
       <div className="mt-6 text-center text-xs text-gray-500">
-        Multiplication Practice: ×2, ×5, ×10
+        Get 3 in a row to win! Practice: Multiplication by 5
       </div>
     </div>
   );
