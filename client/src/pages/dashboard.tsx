@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { Navigation } from "@/components/navigation";
 import { ProgressOverview } from "@/components/progress-overview";
 import { FoundationalFacts } from "@/components/foundational-facts";
+import { DerivedStrategies } from "@/components/derived-strategies";
 import { GameCard } from "@/components/game-card";
 import { Student, StudentProgress, FactCategory, Game } from "@shared/schema";
 
@@ -46,6 +48,8 @@ export default function Dashboard() {
         <ProgressOverview progress={progress} factCategories={factCategories} />
         
         <FoundationalFacts progress={progress} factCategories={factCategories} />
+        
+        <DerivedStrategies progress={progress} factCategories={factCategories} />
         
         {/* Featured Games Section */}
         <section className="mb-8">

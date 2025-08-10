@@ -1,14 +1,20 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { Navigation } from "@/components/navigation";
 import { GameCard } from "@/components/game-card";
+import { RacingBears } from "@/components/games/racing-bears";
+import { DoublesBingo } from "@/components/games/doubles-bingo";
+import { SumWar } from "@/components/games/sum-war";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Game, Student } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Games() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [currentGame, setCurrentGame] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   
   const defaultStudent: Student = {
     id: "student-1",
@@ -23,9 +29,41 @@ export default function Games() {
     queryKey: ["/api/games"],
   });
 
+  const saveGameResultMutation = useMutation({
+    mutationFn: async (result: {
+      gameId: string;
+      score: number;
+      accuracy: number;
+      timeSpent: number;
+      strategiesUsed: string[];
+    }) => {
+      return apiRequest("POST", "/api/students/student-1/game-results", result);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/students/student-1/game-results"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/students/student-1/progress"] });
+    }
+  });
+
   const handlePlayGame = (gameId: string) => {
-    // In a real implementation, this would navigate to the actual game
-    console.log("Playing game:", gameId);
+    setCurrentGame(gameId);
+  };
+
+  const handleGameComplete = (gameId: string, score: number, accuracy: number, strategies: string[]) => {
+    const gameResult = {
+      gameId,
+      score,
+      accuracy,
+      timeSpent: 300, // Mock time spent - in real implementation, track actual time
+      strategiesUsed: strategies
+    };
+    
+    saveGameResultMutation.mutate(gameResult);
+    setCurrentGame(null);
+  };
+
+  const handleExitGame = () => {
+    setCurrentGame(null);
   };
 
   const filteredGames = selectedCategory === "all" 
@@ -38,6 +76,58 @@ export default function Games() {
     { value: "derived", label: "Derived Strategies", count: games.filter(g => g.category === "derived").length },
     { value: "advanced", label: "Advanced", count: games.filter(g => g.category === "advanced").length },
   ];
+
+  // Render current game if one is selected
+  if (currentGame === "racing-bears") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header student={defaultStudent} />
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <RacingBears 
+            onComplete={(score, accuracy, strategies) => 
+              handleGameComplete("racing-bears", score, accuracy, strategies)
+            }
+            onExit={handleExitGame}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (currentGame === "doubles-bingo") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header student={defaultStudent} />
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <DoublesBingo 
+            onComplete={(score, accuracy, strategies) => 
+              handleGameComplete("doubles-bingo", score, accuracy, strategies)
+            }
+            onExit={handleExitGame}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (currentGame === "sum-war") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header student={defaultStudent} />
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <SumWar 
+            onComplete={(score, accuracy, strategies) => 
+              handleGameComplete("sum-war", score, accuracy, strategies)
+            }
+            onExit={handleExitGame}
+          />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

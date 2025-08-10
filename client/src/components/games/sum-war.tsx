@@ -1,0 +1,312 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+interface SumWarProps {
+  onComplete: (score: number, accuracy: number, strategies: string[]) => void;
+  onExit: () => void;
+}
+
+export function SumWar({ onComplete, onExit }: SumWarProps) {
+  const [playerScore, setPlayerScore] = useState(0);
+  const [computerScore, setComputerScore] = useState(0);
+  const [playerCard1, setPlayerCard1] = useState<number | null>(null);
+  const [playerCard2, setPlayerCard2] = useState<number | null>(null);
+  const [computerCard1, setComputerCard1] = useState<number | null>(null);
+  const [computerCard2, setComputerCard2] = useState<number | null>(null);
+  const [round, setRound] = useState(1);
+  const [gamePhase, setGamePhase] = useState<"dealing" | "showing" | "result" | "complete">("dealing");
+  const [feedback, setFeedback] = useState("");
+  const [strategiesUsed, setStrategiesUsed] = useState<string[]>([]);
+  const [playerStrategy, setPlayerStrategy] = useState("");
+
+  const maxRounds = 10;
+
+  useEffect(() => {
+    dealNewRound();
+  }, []);
+
+  const dealNewRound = () => {
+    if (round > maxRounds) {
+      setGamePhase("complete");
+      return;
+    }
+
+    // Deal cards (1-9 for interesting sums)
+    const pCard1 = Math.floor(Math.random() * 9) + 1;
+    const pCard2 = Math.floor(Math.random() * 9) + 1;
+    const cCard1 = Math.floor(Math.random() * 9) + 1;
+    const cCard2 = Math.floor(Math.random() * 9) + 1;
+
+    setPlayerCard1(pCard1);
+    setPlayerCard2(pCard2);
+    setComputerCard1(cCard1);
+    setComputerCard2(cCard2);
+    setGamePhase("showing");
+    setFeedback("");
+    setPlayerStrategy("");
+  };
+
+  const handleStrategySubmit = () => {
+    if (!playerCard1 || !playerCard2 || !computerCard1 || !computerCard2) return;
+
+    const playerSum = playerCard1 + playerCard2;
+    const computerSum = computerCard1 + computerCard2;
+    
+    // Record strategy used
+    if (playerStrategy) {
+      setStrategiesUsed([...strategiesUsed, playerStrategy]);
+    }
+
+    let roundResult = "";
+    if (playerSum > computerSum) {
+      setPlayerScore(playerScore + 1);
+      roundResult = "You win this round! 🎉";
+    } else if (computerSum > playerSum) {
+      setComputerScore(computerScore + 1);
+      roundResult = "Computer wins this round";
+    } else {
+      roundResult = "It's a tie!";
+    }
+
+    setFeedback(`${roundResult} (Your sum: ${playerSum}, Computer: ${computerSum})`);
+    setGamePhase("result");
+
+    setTimeout(() => {
+      setRound(round + 1);
+      dealNewRound();
+    }, 3000);
+  };
+
+  const getStrategySuggestion = () => {
+    if (!playerCard1 || !playerCard2) return "";
+
+    const sum = playerCard1 + playerCard2;
+    const diff = Math.abs(playerCard1 - playerCard2);
+
+    if (playerCard1 === playerCard2) {
+      return `Double: ${playerCard1} + ${playerCard1} = ${sum}`;
+    } else if (diff === 1) {
+      return `Near double: ${Math.min(playerCard1, playerCard2)} + ${Math.max(playerCard1, playerCard2)} = ${Math.min(playerCard1, playerCard2)} + ${Math.min(playerCard1, playerCard2)} + 1`;
+    } else if (sum === 10) {
+      return `Makes 10: ${playerCard1} + ${playerCard2} = 10`;
+    } else if (playerCard1 + playerCard2 > 10) {
+      const makesTen = playerCard1 <= 10 - playerCard2 ? playerCard2 : playerCard1;
+      const remainder = sum - 10;
+      return `Make 10 first: ${makesTen} + ${10 - makesTen} = 10, then add ${remainder}`;
+    }
+    return `Count on: Start at ${Math.max(playerCard1, playerCard2)}, count up ${Math.min(playerCard1, playerCard2)}`;
+  };
+
+  const handleComplete = () => {
+    const totalRounds = round - 1;
+    const accuracy = totalRounds > 0 ? Math.round((playerScore / totalRounds) * 100) : 0;
+    const uniqueStrategies = [...new Set(strategiesUsed.filter(s => s))];
+    onComplete(playerScore * 10, accuracy, uniqueStrategies);
+  };
+
+  if (gamePhase === "complete") {
+    const totalRounds = round - 1;
+    const accuracy = totalRounds > 0 ? Math.round((playerScore / totalRounds) * 100) : 0;
+
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-8 text-center max-w-2xl mx-auto">
+        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <span className="text-white text-3xl">⚔️</span>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">War Complete!</h2>
+        
+        <div className="mb-6">
+          <div className="text-4xl font-bold mb-2">
+            <span className="text-blue-600">{playerScore}</span>
+            <span className="text-gray-400 mx-4">vs</span>
+            <span className="text-red-600">{computerScore}</span>
+          </div>
+          <p className="text-gray-600">
+            {playerScore > computerScore ? "Victory! You won the war! 🏆" :
+             playerScore < computerScore ? "Good effort! Computer won this time." :
+             "It's a tie! Well played!"}
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <p className="text-2xl font-bold text-blue-600">{playerScore * 10}</p>
+            <p className="text-sm text-blue-700">Points Earned</p>
+          </div>
+          <div className="bg-green-50 rounded-lg p-4">
+            <p className="text-2xl font-bold text-green-600">{accuracy}%</p>
+            <p className="text-sm text-green-700">Win Rate</p>
+          </div>
+        </div>
+
+        {strategiesUsed.filter(s => s).length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-semibold text-gray-800 mb-3">Strategies Used:</h3>
+            <div className="flex flex-wrap justify-center gap-2">
+              {[...new Set(strategiesUsed.filter(s => s))].map((strategy, index) => (
+                <Badge key={index} variant="secondary" className="bg-primary-100 text-primary-800">
+                  {strategy}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex space-x-4 justify-center">
+          <Button onClick={handleComplete} className="bg-primary-500 hover:bg-primary-600">
+            Save Results
+          </Button>
+          <Button variant="outline" onClick={onExit}>
+            Back to Games
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <span className="text-3xl">⚔️</span>
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">Sum War</h2>
+            <p className="text-sm text-gray-600">Battle with addition using derived strategies</p>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={onExit}>
+          Exit Game
+        </Button>
+      </div>
+
+      {/* Score Display */}
+      <div className="flex justify-center items-center mb-6">
+        <div className="text-center">
+          <div className="text-3xl font-bold text-blue-600">{playerScore}</div>
+          <p className="text-sm text-blue-700">You</p>
+        </div>
+        <div className="mx-8 text-2xl text-gray-400">vs</div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-red-600">{computerScore}</div>
+          <p className="text-sm text-red-700">Computer</p>
+        </div>
+      </div>
+
+      <div className="text-center mb-6">
+        <p className="text-lg font-semibold text-gray-800">Round {round} of {maxRounds}</p>
+      </div>
+
+      {/* Cards Display */}
+      <div className="grid md:grid-cols-2 gap-8 mb-6">
+        <div className="text-center">
+          <h3 className="font-semibold text-blue-800 mb-4">Your Cards</h3>
+          <div className="flex justify-center space-x-4 mb-4">
+            <div className="w-16 h-24 bg-blue-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
+              {playerCard1}
+            </div>
+            <div className="flex items-center">
+              <span className="text-2xl text-gray-400">+</span>
+            </div>
+            <div className="w-16 h-24 bg-blue-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
+              {playerCard2}
+            </div>
+            <div className="flex items-center">
+              <span className="text-2xl text-gray-400">=</span>
+            </div>
+            <div className="w-16 h-24 bg-blue-600 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
+              {playerCard1 && playerCard2 ? playerCard1 + playerCard2 : "?"}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <h3 className="font-semibold text-red-800 mb-4">Computer Cards</h3>
+          <div className="flex justify-center space-x-4 mb-4">
+            <div className="w-16 h-24 bg-red-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
+              {computerCard1}
+            </div>
+            <div className="flex items-center">
+              <span className="text-2xl text-gray-400">+</span>
+            </div>
+            <div className="w-16 h-24 bg-red-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
+              {computerCard2}
+            </div>
+            <div className="flex items-center">
+              <span className="text-2xl text-gray-400">=</span>
+            </div>
+            <div className="w-16 h-24 bg-red-600 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
+              {computerCard1 && computerCard2 ? computerCard1 + computerCard2 : "?"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Strategy Selection */}
+      {gamePhase === "showing" && (
+        <div className="bg-gray-50 rounded-lg p-6 mb-6">
+          <h4 className="font-semibold text-gray-800 mb-3">How are you solving this?</h4>
+          <p className="text-sm text-blue-600 mb-3">💡 Suggestion: {getStrategySuggestion()}</p>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <button
+              onClick={() => setPlayerStrategy("doubles")}
+              className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                playerStrategy === "doubles" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+              }`}
+            >
+              Doubles
+            </button>
+            <button
+              onClick={() => setPlayerStrategy("near doubles")}
+              className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                playerStrategy === "near doubles" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+              }`}
+            >
+              Near Doubles
+            </button>
+            <button
+              onClick={() => setPlayerStrategy("making ten")}
+              className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                playerStrategy === "making ten" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+              }`}
+            >
+              Making Ten
+            </button>
+            <button
+              onClick={() => setPlayerStrategy("count on")}
+              className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                playerStrategy === "count on" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+              }`}
+            >
+              Count On
+            </button>
+          </div>
+
+          <Button 
+            onClick={handleStrategySubmit}
+            disabled={!playerStrategy}
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white"
+          >
+            Battle!
+          </Button>
+        </div>
+      )}
+
+      {/* Feedback */}
+      {feedback && gamePhase === "result" && (
+        <div className={`p-4 rounded-lg text-center mb-6 ${
+          feedback.includes("win") ? "bg-green-50 border border-green-200 text-green-800" :
+          feedback.includes("tie") ? "bg-yellow-50 border border-yellow-200 text-yellow-800" :
+          "bg-red-50 border border-red-200 text-red-800"
+        }`}>
+          {feedback}
+        </div>
+      )}
+
+      <div className="text-center text-xs text-gray-500">
+        Derived Strategies Practice
+      </div>
+    </div>
+  );
+}
