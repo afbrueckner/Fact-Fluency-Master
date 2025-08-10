@@ -375,26 +375,23 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
           
           {/* Visual aids under player cards */}
           {visualAid === "tenframes" && playerCard1 && playerCard2 && (
-            <div className="flex justify-center space-x-8 mt-4">
+            <div className="flex justify-center space-x-8 mt-6">
               <div className="text-center">
-                <TenFrame number={playerCard1} className="mb-1" />
-                <span className="text-xs text-gray-600">{playerCard1}</span>
+                <TenFrame number={playerCard1} />
               </div>
               {gameMode === "addition" && (
                 <div className="text-center">
-                  <TenFrame number={playerCard2} className="mb-1" />
-                  <span className="text-xs text-gray-600">{playerCard2}</span>
+                  <TenFrame number={playerCard2} />
                 </div>
               )}
             </div>
           )}
           
           {visualAid === "numberline" && playerCard1 && playerCard2 && (
-            <div className="mt-4">
+            <div className="mt-8">
               <NumberLine
                 highlightNumbers={gameMode === "addition" ? [playerCard1, playerCard2, playerCard1 + playerCard2] : [playerCard1, playerCard1 + playerCard2]}
                 max={18}
-                className="mb-2"
               />
             </div>
           )}
@@ -426,24 +423,21 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
           
           {/* Visual aids under computer cards */}
           {visualAid === "tenframes" && computerCard1 && computerCard2 && (
-            <div className="flex justify-center space-x-8 mt-4">
+            <div className="flex justify-center space-x-8 mt-6">
               <div className="text-center">
-                <TenFrame number={computerCard1} className="mb-1" />
-                <span className="text-xs text-gray-600">{computerCard1}</span>
+                <TenFrame number={computerCard1} />
               </div>
               <div className="text-center">
-                <TenFrame number={computerCard2} className="mb-1" />
-                <span className="text-xs text-gray-600">{computerCard2}</span>
+                <TenFrame number={computerCard2} />
               </div>
             </div>
           )}
           
           {visualAid === "numberline" && computerCard1 && computerCard2 && (
-            <div className="mt-4">
+            <div className="mt-8">
               <NumberLine
                 highlightNumbers={[computerCard1, computerCard2, computerCard1 + computerCard2]}
                 max={18}
-                className="mb-2"
               />
             </div>
           )}
