@@ -20,12 +20,13 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
   const [gameComplete, setGameComplete] = useState(false);
   const [strategiesUsed, setStrategiesUsed] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<"showing" | "guessing" | "result">("showing");
+  const [gameMode, setGameMode] = useState<"addition" | "multiplication">("addition");
 
   const maxRounds = 12;
 
   useEffect(() => {
     dealNewRound();
-  }, []);
+  }, [gameMode]);
 
   const dealNewRound = () => {
     if (currentRound > maxRounds) {
@@ -33,13 +34,23 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
       return;
     }
 
-    // Deal two cards (numbers 0-10)
-    const card1 = Math.floor(Math.random() * 11);
-    const card2 = Math.floor(Math.random() * 11);
+    let card1, card2, result;
+    
+    if (gameMode === "addition") {
+      // Deal two cards (numbers 0-10)
+      card1 = Math.floor(Math.random() * 11);
+      card2 = Math.floor(Math.random() * 11);
+      result = card1 + card2;
+    } else {
+      // Multiplication mode: cards 1-10, avoid 0 and 1 for more interesting products
+      card1 = Math.floor(Math.random() * 8) + 2; // 2-9
+      card2 = Math.floor(Math.random() * 8) + 2; // 2-9
+      result = card1 * card2;
+    }
     
     setPlayerCard(card1);
     setHiddenCard(card2);
-    setSum(card1 + card2);
+    setSum(result);
     setUserGuess("");
     setFeedback("");
     setGamePhase("showing");
@@ -59,21 +70,41 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
     if (guess === hiddenCard) {
       setScore(score + 10);
       setCorrectGuesses(correctGuesses + 1);
-      setFeedback(`Correct! The hidden card was ${hiddenCard}. Great job using fact families!`);
       
-      // Determine strategy used
-      let strategy = "fact families";
-      if (sum && sum <= 10) {
-        strategy = "combinations to 10";
-      } else if (playerCard && (playerCard === hiddenCard)) {
-        strategy = "doubles";
-      } else if (playerCard && Math.abs(playerCard - hiddenCard) === 1) {
-        strategy = "near doubles";
+      if (gameMode === "addition") {
+        setFeedback(`Correct! The hidden card was ${hiddenCard}. Great job using fact families!`);
+        
+        // Determine strategy used for addition
+        let strategy = "fact families";
+        if (sum && sum <= 10) {
+          strategy = "combinations to 10";
+        } else if (playerCard && (playerCard === hiddenCard)) {
+          strategy = "doubles";
+        } else if (playerCard && Math.abs(playerCard - hiddenCard) === 1) {
+          strategy = "near doubles";
+        }
+        
+        setStrategiesUsed([...strategiesUsed, strategy]);
+      } else {
+        setFeedback(`Correct! The hidden card was ${hiddenCard}. Great multiplication fact work!`);
+        
+        // Determine strategy used for multiplication
+        let strategy = "multiplication facts";
+        if (playerCard && (playerCard === hiddenCard)) {
+          strategy = "square numbers";
+        } else if (playerCard && (playerCard === 2 || hiddenCard === 2)) {
+          strategy = "doubling";
+        } else if (playerCard && (playerCard === 5 || hiddenCard === 5)) {
+          strategy = "multiples of 5";
+        } else if (playerCard && (playerCard === 10 || hiddenCard === 10)) {
+          strategy = "multiples of 10";
+        }
+        
+        setStrategiesUsed([...strategiesUsed, strategy]);
       }
-      
-      setStrategiesUsed([...strategiesUsed, strategy]);
     } else {
-      setFeedback(`Not quite. The hidden card was ${hiddenCard}. Remember: ${playerCard} + ${hiddenCard} = ${sum}`);
+      const operation = gameMode === "addition" ? "+" : "×";
+      setFeedback(`Not quite. The hidden card was ${hiddenCard}. Remember: ${playerCard} ${operation} ${hiddenCard} = ${sum}`);
     }
     
     setGamePhase("result");
@@ -147,12 +178,56 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
           <span className="text-3xl">👋</span>
           <div>
             <h2 className="text-xl font-bold text-gray-800">Salute!</h2>
-            <p className="text-sm text-gray-600">Practice fact families and missing addends</p>
+            <p className="text-sm text-gray-600">
+              {gameMode === "addition" ? "Find the missing addend using fact families" : "Find the missing factor using multiplication facts"}
+            </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={onExit}>
-          Exit Game
-        </Button>
+        <div className="flex items-center space-x-3">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => {
+                setGameMode("addition");
+                setCurrentRound(1);
+                setScore(0);
+                setCorrectGuesses(0);
+                setTotalRounds(0);
+                setStrategiesUsed([]);
+                setGameComplete(false);
+                dealNewRound();
+              }}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                gameMode === "addition" 
+                  ? "bg-white text-gray-900 shadow-sm" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Addition
+            </button>
+            <button
+              onClick={() => {
+                setGameMode("multiplication");
+                setCurrentRound(1);
+                setScore(0);
+                setCorrectGuesses(0);
+                setTotalRounds(0);
+                setStrategiesUsed([]);
+                setGameComplete(false);
+                dealNewRound();
+              }}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                gameMode === "multiplication" 
+                  ? "bg-white text-gray-900 shadow-sm" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Multiplication
+            </button>
+          </div>
+          <Button variant="outline" size="sm" onClick={onExit}>
+            Exit Game
+          </Button>
+        </div>
       </div>
 
       <div className="text-center mb-6">
@@ -170,7 +245,7 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
             <div className="w-24 h-32 bg-blue-500 text-white rounded-lg flex items-center justify-center text-3xl font-bold shadow-lg">
               {playerCard}
             </div>
-            <span className="text-3xl text-gray-400">+</span>
+            <span className="text-3xl text-gray-400">{gameMode === "addition" ? "+" : "×"}</span>
             <div className="w-24 h-32 bg-blue-500 text-white rounded-lg flex items-center justify-center text-3xl font-bold shadow-lg">
               {hiddenCard}
             </div>
@@ -190,7 +265,7 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
             <div className="w-24 h-32 bg-blue-500 text-white rounded-lg flex items-center justify-center text-3xl font-bold shadow-lg">
               {playerCard}
             </div>
-            <span className="text-3xl text-gray-400">+</span>
+            <span className="text-3xl text-gray-400">{gameMode === "addition" ? "+" : "×"}</span>
             <div className="w-24 h-32 bg-gray-400 text-white rounded-lg flex items-center justify-center text-6xl shadow-lg">
               ?
             </div>
@@ -202,7 +277,7 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
 
           <div className="mb-6">
             <p className="text-gray-600 mb-4">
-              {playerCard} + ? = {sum}
+              {playerCard} {gameMode === "addition" ? "+" : "×"} ? = {sum}
             </p>
             <input
               type="number"
@@ -212,8 +287,8 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
               placeholder="?"
               autoFocus
               onKeyPress={(e) => e.key === 'Enter' && userGuess && handleGuessSubmit()}
-              min="0"
-              max="10"
+              min={gameMode === "addition" ? "0" : "1"}
+              max={gameMode === "addition" ? "10" : "20"}
             />
           </div>
 
