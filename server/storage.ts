@@ -331,6 +331,10 @@ export class MemStorage implements IStorage {
       const progress: StudentProgress = {
         ...insertProgress,
         id,
+        accuracy: insertProgress.accuracy ?? 0,
+        efficiency: insertProgress.efficiency ?? 0,
+        flexibility: insertProgress.flexibility ?? 0,
+        strategyUse: insertProgress.strategyUse ?? 0,
         lastPracticed: new Date(),
         updatedAt: new Date(),
       };
