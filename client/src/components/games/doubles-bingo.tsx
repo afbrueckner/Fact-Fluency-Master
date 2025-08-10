@@ -44,9 +44,10 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
         cardDeck.push(num);
       }
     }
-    setDeck([...cardDeck].sort(() => Math.random() - 0.5));
+    const shuffledDeck = [...cardDeck].sort(() => Math.random() - 0.5);
+    setDeck(shuffledDeck);
     
-    drawNextCard(cardDeck);
+    drawNextCard(shuffledDeck);
   };
 
   const drawNextCard = (currentDeck = deck) => {
