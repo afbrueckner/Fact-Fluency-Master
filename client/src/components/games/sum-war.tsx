@@ -22,6 +22,7 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
   const [playerStrategy, setPlayerStrategy] = useState("");
   const [playerAnswer, setPlayerAnswer] = useState("");
   const [showComputerAnswer, setShowComputerAnswer] = useState(false);
+  const [gameMode, setGameMode] = useState<"addition" | "subtraction">("addition");
 
   const maxRounds = 10;
 
@@ -55,7 +56,6 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
   const handleBattle = () => {
     if (!playerCard1 || !playerCard2 || !computerCard1 || !computerCard2 || !playerStrategy || !playerAnswer) return;
 
-    const correctPlayerSum = playerCard1 + playerCard2;
     const playerGuess = parseInt(playerAnswer);
     const computerSum = computerCard1 + computerCard2;
     
@@ -67,28 +67,50 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
 
     let roundResult = "";
     let accuracyFeedback = "";
+    let correctAnswer: number;
+    let playerFinalScore: number;
     
-    // Check if player's answer is correct
-    if (playerGuess === correctPlayerSum) {
-      accuracyFeedback = "Correct calculation! ";
+    if (gameMode === "addition") {
+      // Addition mode: player finds sum
+      correctAnswer = playerCard1 + playerCard2;
+      playerFinalScore = correctAnswer;
       
-      // Battle comparison
-      if (correctPlayerSum > computerSum) {
+      if (playerGuess === correctAnswer) {
+        accuracyFeedback = "Correct calculation! ";
+      } else {
+        accuracyFeedback = `Incorrect. ${playerCard1} + ${playerCard2} = ${correctAnswer}. `;
+      }
+    } else {
+      // Subtraction mode: player finds missing addend
+      const sum = playerCard1 + playerCard2; // This becomes the target sum
+      correctAnswer = playerCard2; // The missing addend
+      playerFinalScore = sum; // Use the sum for comparison
+      
+      if (playerGuess === correctAnswer) {
+        accuracyFeedback = "Correct calculation! ";
+      } else {
+        accuracyFeedback = `Incorrect. ${playerCard1} + ${correctAnswer} = ${sum}. `;
+      }
+    }
+    
+    // Battle comparison
+    if (playerGuess === correctAnswer) {
+      if (playerFinalScore > computerSum) {
         setPlayerScore(playerScore + 1);
         roundResult = "You win this round!";
-      } else if (computerSum > correctPlayerSum) {
+      } else if (computerSum > playerFinalScore) {
         setComputerScore(computerScore + 1);
         roundResult = "Computer wins this round";
       } else {
         roundResult = "It's a tie!";
       }
     } else {
-      accuracyFeedback = `Incorrect. ${playerCard1} + ${playerCard2} = ${correctPlayerSum}. `;
       setComputerScore(computerScore + 1);
       roundResult = "Computer wins this round (calculation error)";
     }
 
-    setFeedback(`${accuracyFeedback}${roundResult} (Your sum: ${correctPlayerSum}, Computer: ${computerSum})`);
+    const modeText = gameMode === "addition" ? "sum" : "answer";
+    setFeedback(`${accuracyFeedback}${roundResult} (Your ${modeText}: ${playerFinalScore}, Computer: ${computerSum})`);
     setGamePhase("result");
 
     setTimeout(() => {
@@ -100,21 +122,35 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
   const getStrategySuggestion = () => {
     if (!playerCard1 || !playerCard2) return "";
 
-    const sum = playerCard1 + playerCard2;
-    const diff = Math.abs(playerCard1 - playerCard2);
+    if (gameMode === "addition") {
+      const sum = playerCard1 + playerCard2;
+      const diff = Math.abs(playerCard1 - playerCard2);
 
-    if (playerCard1 === playerCard2) {
-      return `Double: ${playerCard1} + ${playerCard1} = ${sum}`;
-    } else if (diff === 1) {
-      return `Near double: ${Math.min(playerCard1, playerCard2)} + ${Math.max(playerCard1, playerCard2)} = ${Math.min(playerCard1, playerCard2)} + ${Math.min(playerCard1, playerCard2)} + 1`;
-    } else if (sum === 10) {
-      return `Makes 10: ${playerCard1} + ${playerCard2} = 10`;
-    } else if (playerCard1 + playerCard2 > 10) {
-      const makesTen = playerCard1 <= 10 - playerCard2 ? playerCard2 : playerCard1;
-      const remainder = sum - 10;
-      return `Make 10 first: ${makesTen} + ${10 - makesTen} = 10, then add ${remainder}`;
+      if (playerCard1 === playerCard2) {
+        return `Double: ${playerCard1} + ${playerCard1} = ${sum}`;
+      } else if (diff === 1) {
+        return `Near double: ${Math.min(playerCard1, playerCard2)} + ${Math.max(playerCard1, playerCard2)} = ${Math.min(playerCard1, playerCard2)} + ${Math.min(playerCard1, playerCard2)} + 1`;
+      } else if (sum === 10) {
+        return `Makes 10: ${playerCard1} + ${playerCard2} = 10`;
+      } else if (playerCard1 + playerCard2 > 10) {
+        const makesTen = playerCard1 <= 10 - playerCard2 ? playerCard2 : playerCard1;
+        const remainder = sum - 10;
+        return `Make 10 first: ${makesTen} + ${10 - makesTen} = 10, then add ${remainder}`;
+      }
+      return `Count on: Start at ${Math.max(playerCard1, playerCard2)}, count up ${Math.min(playerCard1, playerCard2)}`;
+    } else {
+      // Subtraction mode suggestions
+      const sum = playerCard1 + playerCard2;
+      const missing = playerCard2;
+      
+      if (sum === 10) {
+        return `Fact family of 10: ${playerCard1} + ? = 10, so ? = ${missing}`;
+      } else if (sum <= 10) {
+        return `Count up: Start at ${playerCard1}, count to ${sum}`;
+      } else {
+        return `Think addition: ${playerCard1} + ? = ${sum}, so ? = ${missing}`;
+      }
     }
-    return `Count on: Start at ${Math.max(playerCard1, playerCard2)}, count up ${Math.min(playerCard1, playerCard2)}`;
   };
 
   const handleComplete = () => {
@@ -191,12 +227,46 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
           <span className="text-3xl">⚔️</span>
           <div>
             <h2 className="text-xl font-bold text-gray-800">Sum War</h2>
-            <p className="text-sm text-gray-600">Battle with addition using derived strategies</p>
+            <p className="text-sm text-gray-600">
+              {gameMode === "addition" ? "Battle with addition using derived strategies" : "Find missing addends using fact families"}
+            </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={onExit}>
-          Exit Game
-        </Button>
+        <div className="flex items-center space-x-3">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => {
+                setGameMode("addition");
+                setPlayerStrategy("");
+                setPlayerAnswer("");
+              }}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                gameMode === "addition" 
+                  ? "bg-white text-gray-900 shadow-sm" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Find the Sum
+            </button>
+            <button
+              onClick={() => {
+                setGameMode("subtraction");
+                setPlayerStrategy("");
+                setPlayerAnswer("");
+              }}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                gameMode === "subtraction" 
+                  ? "bg-white text-gray-900 shadow-sm" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Find Missing Addend
+            </button>
+          </div>
+          <Button variant="outline" size="sm" onClick={onExit}>
+            Exit Game
+          </Button>
+        </div>
       </div>
 
       {/* Score Display */}
@@ -227,23 +297,43 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
             <div className="flex items-center">
               <span className="text-2xl text-gray-400">+</span>
             </div>
-            <div className="w-16 h-24 bg-blue-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
-              {playerCard2}
-            </div>
+            {gameMode === "addition" ? (
+              <div className="w-16 h-24 bg-blue-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
+                {playerCard2}
+              </div>
+            ) : (
+              <div className="w-16 h-24 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg border-2 border-dashed border-blue-300">
+                <input
+                  type="number"
+                  value={playerAnswer}
+                  onChange={(e) => setPlayerAnswer(e.target.value)}
+                  className="w-12 h-8 text-center text-xl font-bold bg-transparent text-white placeholder-blue-200 border-none focus:outline-none"
+                  placeholder="?"
+                  min="1"
+                  max="9"
+                />
+              </div>
+            )}
             <div className="flex items-center">
               <span className="text-2xl text-gray-400">=</span>
             </div>
-            <div className="w-16 h-24 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg border-2 border-dashed border-blue-300">
-              <input
-                type="number"
-                value={playerAnswer}
-                onChange={(e) => setPlayerAnswer(e.target.value)}
-                className="w-12 h-8 text-center text-xl font-bold bg-transparent text-white placeholder-blue-200 border-none focus:outline-none"
-                placeholder="?"
-                min="2"
-                max="18"
-              />
-            </div>
+            {gameMode === "addition" ? (
+              <div className="w-16 h-24 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg border-2 border-dashed border-blue-300">
+                <input
+                  type="number"
+                  value={playerAnswer}
+                  onChange={(e) => setPlayerAnswer(e.target.value)}
+                  className="w-12 h-8 text-center text-xl font-bold bg-transparent text-white placeholder-blue-200 border-none focus:outline-none"
+                  placeholder="?"
+                  min="2"
+                  max="18"
+                />
+              </div>
+            ) : (
+              <div className="w-16 h-24 bg-blue-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
+                {playerCard1 + playerCard2}
+              </div>
+            )}
           </div>
         </div>
 
@@ -276,42 +366,83 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
       {/* Strategy Selection */}
       {gamePhase === "showing" && (
         <div className="bg-gray-50 rounded-lg p-6 mb-6">
-          <h4 className="font-semibold text-gray-800 mb-3">How are you solving this?</h4>
+          <h4 className="font-semibold text-gray-800 mb-3">
+            {gameMode === "addition" ? "How are you finding the sum?" : "How are you finding the missing addend?"}
+          </h4>
           <p className="text-sm text-blue-600 mb-3">💡 Suggestion: {getStrategySuggestion()}</p>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-            <button
-              onClick={() => setPlayerStrategy("doubles")}
-              className={`p-3 rounded-lg text-sm border-2 transition-colors ${
-                playerStrategy === "doubles" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
-              }`}
-            >
-              Doubles
-            </button>
-            <button
-              onClick={() => setPlayerStrategy("near doubles")}
-              className={`p-3 rounded-lg text-sm border-2 transition-colors ${
-                playerStrategy === "near doubles" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
-              }`}
-            >
-              Near Doubles
-            </button>
-            <button
-              onClick={() => setPlayerStrategy("making ten")}
-              className={`p-3 rounded-lg text-sm border-2 transition-colors ${
-                playerStrategy === "making ten" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
-              }`}
-            >
-              Making Ten
-            </button>
-            <button
-              onClick={() => setPlayerStrategy("count on")}
-              className={`p-3 rounded-lg text-sm border-2 transition-colors ${
-                playerStrategy === "count on" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
-              }`}
-            >
-              Count On
-            </button>
+            {gameMode === "addition" ? (
+              <>
+                <button
+                  onClick={() => setPlayerStrategy("doubles")}
+                  className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                    playerStrategy === "doubles" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                  }`}
+                >
+                  Doubles
+                </button>
+                <button
+                  onClick={() => setPlayerStrategy("near doubles")}
+                  className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                    playerStrategy === "near doubles" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                  }`}
+                >
+                  Near Doubles
+                </button>
+                <button
+                  onClick={() => setPlayerStrategy("making ten")}
+                  className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                    playerStrategy === "making ten" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                  }`}
+                >
+                  Making Ten
+                </button>
+                <button
+                  onClick={() => setPlayerStrategy("count on")}
+                  className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                    playerStrategy === "count on" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                  }`}
+                >
+                  Count On
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setPlayerStrategy("fact families")}
+                  className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                    playerStrategy === "fact families" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                  }`}
+                >
+                  Fact Families
+                </button>
+                <button
+                  onClick={() => setPlayerStrategy("count up")}
+                  className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                    playerStrategy === "count up" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                  }`}
+                >
+                  Count Up
+                </button>
+                <button
+                  onClick={() => setPlayerStrategy("think addition")}
+                  className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                    playerStrategy === "think addition" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                  }`}
+                >
+                  Think Addition
+                </button>
+                <button
+                  onClick={() => setPlayerStrategy("compensation")}
+                  className={`p-3 rounded-lg text-sm border-2 transition-colors ${
+                    playerStrategy === "compensation" ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                  }`}
+                >
+                  Compensation
+                </button>
+              </>
+            )}
           </div>
 
           <Button 
@@ -336,7 +467,7 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
       )}
 
       <div className="text-center text-xs text-gray-500">
-        Derived Strategies Practice
+        {gameMode === "addition" ? "Derived Strategies Practice" : "Fact Families & Missing Addends Practice"}
       </div>
     </div>
   );
