@@ -24,6 +24,82 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
 
   const maxRounds = 12;
 
+  const getStrategySuggestions = () => {
+    if (!playerCard || !sum) return [];
+    
+    const suggestions = [];
+    
+    if (gameMode === "addition") {
+      // Addition strategies
+      if (sum <= 10) {
+        suggestions.push("Think: What combinations make " + sum + "?");
+      }
+      
+      if (playerCard <= 5 && sum - playerCard <= 5) {
+        suggestions.push("Use your fingers: Start with " + playerCard + " and count up to " + sum);
+      }
+      
+      if (playerCard === 0 || sum - playerCard === 0) {
+        suggestions.push("Remember: Adding 0 doesn't change the number");
+      }
+      
+      if (playerCard === 1 || sum - playerCard === 1) {
+        suggestions.push("Adding 1 means the next number in sequence");
+      }
+      
+      if (playerCard === sum - playerCard) {
+        suggestions.push("This is a doubles fact: " + playerCard + " + " + playerCard + " = " + sum);
+      }
+      
+      if (Math.abs(playerCard - (sum - playerCard)) === 1) {
+        const double = Math.min(playerCard, sum - playerCard);
+        suggestions.push("Near doubles: " + double + " + " + double + " = " + (double * 2) + ", then add 1");
+      }
+      
+      if (sum === 10) {
+        suggestions.push("Combinations to 10 are important foundation facts!");
+      }
+      
+      suggestions.push("Think backwards: " + sum + " - " + playerCard + " = ?");
+      
+    } else {
+      // Multiplication strategies
+      const hiddenFactor = sum / playerCard;
+      
+      if (playerCard === 1 || hiddenFactor === 1) {
+        suggestions.push("Multiplying by 1 keeps the number the same");
+      }
+      
+      if (playerCard === 2 || hiddenFactor === 2) {
+        suggestions.push("Multiplying by 2 is doubling: " + Math.max(playerCard, hiddenFactor) + " + " + Math.max(playerCard, hiddenFactor));
+      }
+      
+      if (playerCard === 5 || hiddenFactor === 5) {
+        const other = playerCard === 5 ? hiddenFactor : playerCard;
+        suggestions.push("Multiples of 5: Count by 5s " + other + " times");
+      }
+      
+      if (playerCard === 10 || hiddenFactor === 10) {
+        const other = playerCard === 10 ? hiddenFactor : playerCard;
+        suggestions.push("Multiplying by 10: Add a zero to " + other);
+      }
+      
+      if (playerCard === hiddenFactor) {
+        suggestions.push("This is a square number: " + playerCard + " × " + playerCard);
+      }
+      
+      if (playerCard === 9 || hiddenFactor === 9) {
+        const other = playerCard === 9 ? hiddenFactor : playerCard;
+        suggestions.push("Multiplying by 9: Think " + other + " × 10 - " + other);
+      }
+      
+      suggestions.push("Think division: " + sum + " ÷ " + playerCard + " = ?");
+      suggestions.push("Use a known fact: Do you know a multiplication fact close to this?");
+    }
+    
+    return suggestions.slice(0, 3); // Return up to 3 suggestions
+  };
+
   useEffect(() => {
     dealNewRound();
   }, [gameMode]);
@@ -292,6 +368,23 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
             />
           </div>
 
+          {/* Strategy Suggestions Box */}
+          {getStrategySuggestions().length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 max-w-md mx-auto">
+              <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
+                <span className="mr-2">💡</span>
+                Strategy Hints
+              </h4>
+              <div className="space-y-2">
+                {getStrategySuggestions().map((suggestion, index) => (
+                  <p key={index} className="text-sm text-blue-700 bg-white rounded px-3 py-2 border border-blue-100">
+                    {suggestion}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
           <Button 
             onClick={handleGuessSubmit}
             disabled={userGuess === ""}
@@ -313,7 +406,7 @@ export function Salute({ onComplete, onExit }: SaluteProps) {
               <div className="w-16 h-20 bg-blue-500 text-white rounded-lg flex items-center justify-center text-xl font-bold">
                 {playerCard}
               </div>
-              <span className="text-xl text-gray-400">+</span>
+              <span className="text-xl text-gray-400">{gameMode === "addition" ? "+" : "×"}</span>
               <div className="w-16 h-20 bg-blue-500 text-white rounded-lg flex items-center justify-center text-xl font-bold">
                 {hiddenCard}
               </div>
