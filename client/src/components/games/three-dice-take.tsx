@@ -65,20 +65,19 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
       // Clean the equation and check if it uses all three dice values
       const cleanEquation = equation.replace(/\s/g, '');
       
-      // Check if all dice values are used exactly once
-      const diceUsage = [...diceValues];
-      let equationCopy = cleanEquation;
-      
-      for (const die of diceValues) {
-        const regex = new RegExp(`\\b${die}\\b`);
-        if (regex.test(equationCopy)) {
-          equationCopy = equationCopy.replace(regex, 'X');
-          const index = diceUsage.indexOf(die);
-          if (index > -1) diceUsage.splice(index, 1);
-        }
+      // Extract all numbers from the equation
+      const numbersInEquation = cleanEquation.match(/\b\d+\b/g);
+      if (!numbersInEquation || numbersInEquation.length !== 3) {
+        return { valid: false, result: null, usesAllDice: false };
       }
       
-      const usesAllDice = diceUsage.length === 0;
+      // Convert to numbers and sort both arrays for comparison
+      const equationNumbers = numbersInEquation.map(n => parseInt(n)).sort((a, b) => a - b);
+      const sortedDice = [...diceValues].sort((a, b) => a - b);
+      
+      // Check if the numbers in equation exactly match the dice
+      const usesAllDice = equationNumbers.length === 3 && 
+        equationNumbers.every((num, index) => num === sortedDice[index]);
       
       // Only allow basic operations and numbers
       if (!/^[0-9+\-*/().\s]+$/.test(equation)) {
