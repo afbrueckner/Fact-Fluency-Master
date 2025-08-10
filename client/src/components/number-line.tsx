@@ -47,12 +47,7 @@ export function NumberLine({ highlightNumbers = [], max = 20, className = "" }: 
         </div>
       </div>
       
-      {/* Arrow indicators for highlighted numbers */}
-      {highlightNumbers.length > 0 && (
-        <div className="mt-2 text-xs text-blue-600">
-          Numbers: {highlightNumbers.join(', ')}
-        </div>
-      )}
+
     </div>
   );
 }
