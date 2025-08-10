@@ -29,7 +29,7 @@ export function RacingBears({ onComplete, onExit }: RacingBearsProps) {
     { problem: "1 + 1", answer: 2, strategy: "adding one" },
   ];
 
-  const currentQ = problems[currentProblem];
+  const currentQ = problems[currentProblem] || problems[0];
   const correctAnswers = strategiesUsed.filter(s => s !== "incorrect").length;
   const accuracy = Math.round((correctAnswers / Math.max(currentProblem, 1)) * 100);
 
@@ -40,6 +40,8 @@ export function RacingBears({ onComplete, onExit }: RacingBearsProps) {
   }, [currentProblem]);
 
   const handleSubmitAnswer = () => {
+    if (!currentQ || currentProblem >= problems.length) return;
+    
     const answer = parseInt(userAnswer);
     const isCorrect = answer === currentQ.answer;
     
@@ -139,7 +141,7 @@ export function RacingBears({ onComplete, onExit }: RacingBearsProps) {
 
       <div className="text-center mb-8">
         <div className="bg-gray-50 rounded-lg p-8 mb-6">
-          <p className="text-3xl font-bold text-gray-800 mb-4">{currentQ.problem} = ?</p>
+          <p className="text-3xl font-bold text-gray-800 mb-4">{currentQ?.problem || "Loading..."} = ?</p>
           <input
             type="number"
             value={userAnswer}
