@@ -37,8 +37,13 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
     const board = boardNumbers.map(num => ({ number: num, covered: false }));
     setBingoBoard(board);
 
-    // Create deck of cards (1-10, no zero)
-    const cardDeck = Array.from({ length: 10 }, (_, i) => i + 1);
+    // Create deck of cards (4 of each number 1-10 = 40 cards)
+    const cardDeck: number[] = [];
+    for (let num = 1; num <= 10; num++) {
+      for (let copy = 0; copy < 4; copy++) {
+        cardDeck.push(num);
+      }
+    }
     setDeck([...cardDeck].sort(() => Math.random() - 0.5));
     
     drawNextCard(cardDeck);
@@ -53,6 +58,14 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
     const nextCard = currentDeck[0];
     setCurrentCard(nextCard);
     setDeck(currentDeck.slice(1));
+  };
+
+  const handleSkipCard = () => {
+    setFeedback("Card skipped - answer not on board");
+    setTimeout(() => {
+      setFeedback("");
+      drawNextCard();
+    }, 1500);
   };
 
   const handleBoardClick = (index: number) => {
@@ -206,6 +219,16 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
                 </div>
               </div>
             )}
+            
+            <Button 
+              onClick={handleSkipCard}
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              disabled={feedback !== ""}
+            >
+              Skip Card
+            </Button>
           </div>
 
           {feedback && (
