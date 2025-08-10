@@ -40,13 +40,7 @@ export function NumberLine({ highlightNumbers = [], max = 20, className = "" }: 
                   </span>
                 )}
                 
-                {/* Highlight dot */}
-                {isHighlighted && (
-                  <div 
-                    className="w-2 h-2 bg-blue-500 rounded-full absolute"
-                    style={{ transform: 'translateY(-125%)' }}
-                  ></div>
-                )}
+
               </div>
             );
           })}
