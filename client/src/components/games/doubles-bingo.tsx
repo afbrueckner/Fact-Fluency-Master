@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TenFrame } from "@/components/ten-frame";
 
 interface DoublesBingoProps {
   onComplete: (score: number, accuracy: number, strategies: string[]) => void;
@@ -23,18 +24,21 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
   }, []);
 
   const initializeGame = () => {
-    // Doubles sums: 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20
-    const possibleSums = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+    // Doubles sums for numbers 1-10: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20
+    const possibleSums = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
     
-    // Create random bingo board with some of these sums
-    const shuffledSums = [...possibleSums].sort(() => Math.random() - 0.5);
-    const boardNumbers = shuffledSums.slice(0, 16).sort((a, b) => a - b);
+    // Create random bingo board with these sums (duplicates allowed for 4x4 = 16 spaces)
+    const boardNumbers = [];
+    for (let i = 0; i < 16; i++) {
+      const randomSum = possibleSums[Math.floor(Math.random() * possibleSums.length)];
+      boardNumbers.push(randomSum);
+    }
     
     const board = boardNumbers.map(num => ({ number: num, covered: false }));
     setBingoBoard(board);
 
-    // Create deck of cards (0-10)
-    const cardDeck = Array.from({ length: 11 }, (_, i) => i);
+    // Create deck of cards (1-10, no zero)
+    const cardDeck = Array.from({ length: 10 }, (_, i) => i + 1);
     setDeck([...cardDeck].sort(() => Math.random() - 0.5));
     
     drawNextCard(cardDeck);
@@ -187,12 +191,20 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
         <div className="text-center">
           <h3 className="font-semibold text-gray-800 mb-4">Current Card</h3>
           <div className="bg-primary-50 rounded-lg p-8 mb-4">
-            <div className="text-6xl font-bold text-primary-600 mb-2">{currentCard}</div>
-            <p className="text-gray-600">Double this number!</p>
+            <div className="text-6xl font-bold text-primary-600 mb-4">{currentCard}</div>
+            <p className="text-gray-600 mb-4">Double this number!</p>
             {currentCard !== null && (
-              <p className="text-sm text-gray-500 mt-2">
-                {currentCard} + {currentCard} = {currentCard * 2}
-              </p>
+              <div className="flex justify-center items-center space-x-4">
+                <div className="text-center">
+                  <TenFrame number={currentCard} />
+                  <p className="text-xs text-gray-500 mt-1">{currentCard}</p>
+                </div>
+                <span className="text-2xl text-gray-400">+</span>
+                <div className="text-center">
+                  <TenFrame number={currentCard} />
+                  <p className="text-xs text-gray-500 mt-1">{currentCard}</p>
+                </div>
+              </div>
             )}
           </div>
 
@@ -228,7 +240,7 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
           </div>
           
           <div className="text-xs text-gray-500 text-center">
-            Get 4 in a row (horizontal, vertical, or diagonal) for BINGO!
+            Find the double and get 4 in a row for BINGO!
           </div>
         </div>
       </div>
