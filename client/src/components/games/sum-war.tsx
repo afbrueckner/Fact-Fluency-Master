@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SumWarProps {
   onComplete: (score: number, accuracy: number, strategies: string[]) => void;
@@ -19,6 +20,8 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
   const [feedback, setFeedback] = useState("");
   const [strategiesUsed, setStrategiesUsed] = useState<string[]>([]);
   const [playerStrategy, setPlayerStrategy] = useState("");
+  const [playerAnswer, setPlayerAnswer] = useState("");
+  const [showComputerAnswer, setShowComputerAnswer] = useState(false);
 
   const maxRounds = 10;
 
@@ -45,31 +48,47 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
     setGamePhase("showing");
     setFeedback("");
     setPlayerStrategy("");
+    setPlayerAnswer("");
+    setShowComputerAnswer(false);
   };
 
-  const handleStrategySubmit = () => {
-    if (!playerCard1 || !playerCard2 || !computerCard1 || !computerCard2) return;
+  const handleBattle = () => {
+    if (!playerCard1 || !playerCard2 || !computerCard1 || !computerCard2 || !playerStrategy || !playerAnswer) return;
 
-    const playerSum = playerCard1 + playerCard2;
+    const correctPlayerSum = playerCard1 + playerCard2;
+    const playerGuess = parseInt(playerAnswer);
     const computerSum = computerCard1 + computerCard2;
     
+    // Show computer answer
+    setShowComputerAnswer(true);
+    
     // Record strategy used
-    if (playerStrategy) {
-      setStrategiesUsed([...strategiesUsed, playerStrategy]);
-    }
+    setStrategiesUsed([...strategiesUsed, playerStrategy]);
 
     let roundResult = "";
-    if (playerSum > computerSum) {
-      setPlayerScore(playerScore + 1);
-      roundResult = "You win this round! 🎉";
-    } else if (computerSum > playerSum) {
-      setComputerScore(computerScore + 1);
-      roundResult = "Computer wins this round";
+    let accuracyFeedback = "";
+    
+    // Check if player's answer is correct
+    if (playerGuess === correctPlayerSum) {
+      accuracyFeedback = "Correct calculation! ";
+      
+      // Battle comparison
+      if (correctPlayerSum > computerSum) {
+        setPlayerScore(playerScore + 1);
+        roundResult = "You win this round!";
+      } else if (computerSum > correctPlayerSum) {
+        setComputerScore(computerScore + 1);
+        roundResult = "Computer wins this round";
+      } else {
+        roundResult = "It's a tie!";
+      }
     } else {
-      roundResult = "It's a tie!";
+      accuracyFeedback = `Incorrect. ${playerCard1} + ${playerCard2} = ${correctPlayerSum}. `;
+      setComputerScore(computerScore + 1);
+      roundResult = "Computer wins this round (calculation error)";
     }
 
-    setFeedback(`${roundResult} (Your sum: ${playerSum}, Computer: ${computerSum})`);
+    setFeedback(`${accuracyFeedback}${roundResult} (Your sum: ${correctPlayerSum}, Computer: ${computerSum})`);
     setGamePhase("result");
 
     setTimeout(() => {
@@ -101,7 +120,7 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
   const handleComplete = () => {
     const totalRounds = round - 1;
     const accuracy = totalRounds > 0 ? Math.round((playerScore / totalRounds) * 100) : 0;
-    const uniqueStrategies = [...new Set(strategiesUsed.filter(s => s))];
+    const uniqueStrategies = Array.from(new Set(strategiesUsed.filter(s => s)));
     onComplete(playerScore * 10, accuracy, uniqueStrategies);
   };
 
@@ -144,7 +163,7 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
           <div className="mb-6">
             <h3 className="font-semibold text-gray-800 mb-3">Strategies Used:</h3>
             <div className="flex flex-wrap justify-center gap-2">
-              {[...new Set(strategiesUsed.filter(s => s))].map((strategy, index) => (
+              {Array.from(new Set(strategiesUsed.filter(s => s))).map((strategy, index) => (
                 <Badge key={index} variant="secondary" className="bg-primary-100 text-primary-800">
                   {strategy}
                 </Badge>
@@ -214,8 +233,16 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
             <div className="flex items-center">
               <span className="text-2xl text-gray-400">=</span>
             </div>
-            <div className="w-16 h-24 bg-blue-600 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
-              {playerCard1 && playerCard2 ? playerCard1 + playerCard2 : "?"}
+            <div className="w-16 h-24 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg border-2 border-dashed border-blue-300">
+              <input
+                type="number"
+                value={playerAnswer}
+                onChange={(e) => setPlayerAnswer(e.target.value)}
+                className="w-12 h-8 text-center text-xl font-bold bg-transparent text-white placeholder-blue-200 border-none focus:outline-none"
+                placeholder="?"
+                min="2"
+                max="18"
+              />
             </div>
           </div>
         </div>
@@ -236,7 +263,11 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
               <span className="text-2xl text-gray-400">=</span>
             </div>
             <div className="w-16 h-24 bg-red-600 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-lg">
-              {computerCard1 && computerCard2 ? computerCard1 + computerCard2 : "?"}
+              {showComputerAnswer ? (
+                computerCard1! + computerCard2!
+              ) : (
+                <span className="text-4xl">?</span>
+              )}
             </div>
           </div>
         </div>
@@ -284,8 +315,8 @@ export function SumWar({ onComplete, onExit }: SumWarProps) {
           </div>
 
           <Button 
-            onClick={handleStrategySubmit}
-            disabled={!playerStrategy}
+            onClick={handleBattle}
+            disabled={!playerStrategy || !playerAnswer}
             className="w-full bg-primary-500 hover:bg-primary-600 text-white"
           >
             Battle!
