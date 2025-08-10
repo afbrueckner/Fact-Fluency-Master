@@ -8,6 +8,7 @@ import { DoublesBingo } from "@/components/games/doubles-bingo";
 import { SumWar } from "@/components/games/sum-war";
 import { Trios } from "@/components/games/trios";
 import { Salute } from "@/components/games/salute";
+import { ThreeDiceTake } from "@/components/games/three-dice-take";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Game, Student } from "@shared/schema";
@@ -157,6 +158,23 @@ export default function Games() {
           <Salute 
             onComplete={(score, accuracy, strategies) => 
               handleGameComplete("salute", score, accuracy, strategies)
+            }
+            onExit={handleExitGame}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (currentGame === "three-dice-take") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header student={defaultStudent} />
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <ThreeDiceTake 
+            onComplete={(score, accuracy, strategies) => 
+              handleGameComplete("three-dice-take", score, accuracy, strategies)
             }
             onExit={handleExitGame}
           />
