@@ -52,7 +52,7 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
   };
 
   const handleBoardClick = (index: number) => {
-    if (bingoBoard[index].covered || currentCard === null) return;
+    if (!bingoBoard[index] || bingoBoard[index].covered || currentCard === null) return;
 
     const selectedNumber = bingoBoard[index].number;
     const doubleOfCard = currentCard * 2;
@@ -87,11 +87,14 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
   };
 
   const checkForBingo = (board: { number: number; covered: boolean }[]) => {
+    if (!board || board.length < 16) return false;
+    
     // Check rows (4x4 grid)
     for (let row = 0; row < 4; row++) {
       let count = 0;
       for (let col = 0; col < 4; col++) {
-        if (board[row * 4 + col].covered) count++;
+        const index = row * 4 + col;
+        if (board[index] && board[index].covered) count++;
       }
       if (count >= 4) return true;
     }
@@ -100,7 +103,8 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
     for (let col = 0; col < 4; col++) {
       let count = 0;
       for (let row = 0; row < 4; row++) {
-        if (board[row * 4 + col].covered) count++;
+        const index = row * 4 + col;
+        if (board[index] && board[index].covered) count++;
       }
       if (count >= 4) return true;
     }
@@ -108,8 +112,10 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
     // Check diagonals
     let diag1Count = 0, diag2Count = 0;
     for (let i = 0; i < 4; i++) {
-      if (board[i * 4 + i].covered) diag1Count++;
-      if (board[i * 4 + (3 - i)].covered) diag2Count++;
+      const diag1Index = i * 4 + i;
+      const diag2Index = i * 4 + (3 - i);
+      if (board[diag1Index] && board[diag1Index].covered) diag1Count++;
+      if (board[diag2Index] && board[diag2Index].covered) diag2Count++;
     }
     if (diag1Count >= 4 || diag2Count >= 4) return true;
 
@@ -209,14 +215,14 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
               <button
                 key={index}
                 onClick={() => handleBoardClick(index)}
-                disabled={cell.covered}
+                disabled={!cell || cell.covered}
                 className={`aspect-square text-lg font-bold rounded-lg border-2 transition-all ${
-                  cell.covered 
+                  cell && cell.covered 
                     ? "bg-green-500 text-white border-green-600"
                     : "bg-white text-gray-800 border-gray-300 hover:border-primary-500 hover:bg-primary-50"
                 }`}
               >
-                {cell.covered ? "✓" : cell.number}
+                {cell && cell.covered ? "✓" : (cell ? cell.number : "")}
               </button>
             ))}
           </div>
