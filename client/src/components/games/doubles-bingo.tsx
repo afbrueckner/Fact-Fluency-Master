@@ -92,15 +92,21 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
       if (checkForBingo(newBoard)) {
         setScore(score + 50); // Bonus for bingo
         setFeedback("BINGO! You got 4 in a row! +50 bonus points!");
+        setTimeout(() => {
+          setGameComplete(true);
+        }, 2500); // Give time to see the BINGO message
+        return; // Don't continue to draw next card
       }
     } else {
       setFeedback(`Not quite. ${currentCard} + ${currentCard} = ${doubleOfCard}, not ${selectedNumber}`);
     }
 
-    // Draw next card after short delay
+    // Draw next card after short delay (only if game isn't complete)
     setTimeout(() => {
-      setFeedback("");
-      drawNextCard();
+      if (!gameComplete) {
+        setFeedback("");
+        drawNextCard();
+      }
     }, 2000);
   };
 
@@ -153,7 +159,9 @@ export function DoublesBingo({ onComplete, onExit }: DoublesBingoProps) {
         <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <span className="text-white text-3xl">🎯</span>
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Bingo Complete!</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          {bingoBoard.some(cell => cell && cell.covered) && checkForBingo(bingoBoard) ? "BINGO! You Won!" : "Game Complete!"}
+        </h2>
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           <div className="bg-blue-50 rounded-lg p-4">
             <p className="text-2xl font-bold text-blue-600">{score}</p>
