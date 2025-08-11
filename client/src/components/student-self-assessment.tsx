@@ -28,11 +28,11 @@ interface DropZone {
 // Foundational facts sorting categories based on Bay-Williams & Kling framework
 const FOUNDATIONAL_DROP_ZONES: DropZone[] = [
   {
-    id: "know-it",
-    title: "I Know It",
+    id: "knew-it",
+    title: "I Knew It",
     description: "I can answer this quickly and confidently",
     color: "bg-green-50 border-green-300 text-green-800",
-    icon: "✓"
+    icon: "⚡"
   },
   {
     id: "used-strategy", 
@@ -46,7 +46,46 @@ const FOUNDATIONAL_DROP_ZONES: DropZone[] = [
     title: "I Counted",
     description: "I had to count to solve this",
     color: "bg-orange-50 border-orange-300 text-orange-800",
-    icon: "📱"
+    icon: "🔢"
+  }
+];
+
+// Derived facts for addition sorting categories
+const DERIVED_ADDITION_DROP_ZONES: DropZone[] = [
+  {
+    id: "knew-it",
+    title: "I Knew It",
+    description: "I just knew the answer automatically",
+    color: "bg-green-50 border-green-300 text-green-800",
+    icon: "⚡"
+  },
+  {
+    id: "near-doubles",
+    title: "Near Doubles",
+    description: "I used a doubles fact plus one more",
+    color: "bg-purple-50 border-purple-300 text-purple-800",
+    icon: "👥"
+  },
+  {
+    id: "make-10",
+    title: "Make 10",
+    description: "I made 10 first, then added more",
+    color: "bg-blue-50 border-blue-300 text-blue-800",
+    icon: "🔟"
+  },
+  {
+    id: "used-strategy",
+    title: "I Used a Strategy",
+    description: "I used another thinking strategy",
+    color: "bg-yellow-50 border-yellow-300 text-yellow-800",
+    icon: "💭"
+  },
+  {
+    id: "counted",
+    title: "I Counted",
+    description: "I had to count to solve this",
+    color: "bg-orange-50 border-orange-300 text-orange-800",
+    icon: "🔢"
   }
 ];
 
@@ -118,6 +157,109 @@ const generateFoundationalFacts = (): MathFact[] => {
   return facts.slice(0, 15); // Limit to manageable set
 };
 
+const generateFoundationalSubtractionFacts = (): MathFact[] => {
+  const facts: MathFact[] = [];
+  
+  // -0, -1, -2 facts
+  for (let i = 2; i <= 10; i++) {
+    facts.push({
+      id: `sub-0-${i}`,
+      problem: `${i} - 0`,
+      answer: i,
+      category: 'foundational-subtraction'
+    });
+    if (i >= 1) {
+      facts.push({
+        id: `sub-1-${i}`,
+        problem: `${i} - 1`,
+        answer: i - 1,
+        category: 'foundational-subtraction'
+      });
+    }
+    if (i >= 2) {
+      facts.push({
+        id: `sub-2-${i}`,
+        problem: `${i} - 2`,
+        answer: i - 2,
+        category: 'foundational-subtraction'
+      });
+    }
+  }
+  
+  // Doubles-related subtraction
+  const doublesSub = [
+    [10, 5], [8, 4], [6, 3], [16, 8], [14, 7], [12, 6], [18, 9], [4, 2]
+  ];
+  doublesSub.forEach(([a, b], index) => {
+    facts.push({
+      id: `double-sub-${index}`,
+      problem: `${a} - ${b}`,
+      answer: a - b,
+      category: 'foundational-subtraction'
+    });
+  });
+  
+  // Combos of 10 related subtraction
+  const combosSub = [
+    [10, 6], [11, 10], [10, 7], [12, 2], [10, 2], [16, 6], [10, 3], [17, 10]
+  ];
+  combosSub.forEach(([a, b], index) => {
+    facts.push({
+      id: `combo-sub-${index}`,
+      problem: `${a} - ${b}`,
+      answer: a - b,
+      category: 'foundational-subtraction'
+    });
+  });
+  
+  return facts.slice(0, 15);
+};
+
+const generateDerivedAdditionFacts = (): MathFact[] => {
+  const facts: MathFact[] = [];
+  
+  // Near doubles (from PDF card sets)
+  const nearDoubles = [
+    [6, 7], [7, 8], [5, 6], [8, 9], [4, 5], [3, 4], [7, 9], [6, 9]
+  ];
+  nearDoubles.forEach(([a, b], index) => {
+    facts.push({
+      id: `near-double-${index}`,
+      problem: `${a} + ${b}`,
+      answer: a + b,
+      category: 'derived-addition'
+    });
+  });
+  
+  // Making 10 strategies
+  const make10Facts = [
+    [9, 5], [8, 4], [8, 6], [7, 5], [8, 3], [9, 4], [8, 7], [7, 4]
+  ];
+  make10Facts.forEach(([a, b], index) => {
+    facts.push({
+      id: `make10-${index}`,
+      problem: `${a} + ${b}`,
+      answer: a + b,
+      category: 'derived-addition'
+    });
+  });
+  
+  // Additional derived facts
+  const otherDerived = [
+    [5, 3], [3, 6], [4, 7], [5, 8], [3, 9]
+  ];
+  otherDerived.forEach(([a, b], index) => {
+    facts.push({
+      id: `derived-${index}`,
+      problem: `${a} + ${b}`,
+      answer: a + b,
+      category: 'derived-addition'
+    });
+  });
+  
+  return facts.slice(0, 15);
+};
+
 const generateCombinationsOf10Facts = (): MathFact[] => {
   const facts: MathFact[] = [];
   
@@ -141,7 +283,7 @@ const generateCombinationsOf10Facts = (): MathFact[] => {
 };
 
 export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAssessmentProps) {
-  const [currentAssessmentType, setCurrentAssessmentType] = useState<'foundational' | 'combinations' | null>(null);
+  const [currentAssessmentType, setCurrentAssessmentType] = useState<'foundational' | 'foundational-subtraction' | 'derived-addition' | 'combinations' | null>(null);
   const [facts, setFacts] = useState<MathFact[]>([]);
   const [sortedFacts, setSortedFacts] = useState<{ [key: string]: MathFact[] }>({});
   const [draggedFact, setDraggedFact] = useState<MathFact | null>(null);
@@ -166,6 +308,22 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
     const foundationalFacts = generateFoundationalFacts();
     setFacts(foundationalFacts);
     setCurrentAssessmentType('foundational');
+    setSortedFacts({});
+    setShowResults(false);
+  };
+
+  const startFoundationalSubtractionAssessment = () => {
+    const subtractionFacts = generateFoundationalSubtractionFacts();
+    setFacts(subtractionFacts);
+    setCurrentAssessmentType('foundational-subtraction');
+    setSortedFacts({});
+    setShowResults(false);
+  };
+
+  const startDerivedAdditionAssessment = () => {
+    const derivedFacts = generateDerivedAdditionFacts();
+    setFacts(derivedFacts);
+    setCurrentAssessmentType('derived-addition');
     setSortedFacts({});
     setShowResults(false);
   };
@@ -252,7 +410,32 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
   };
 
   const getCurrentDropZones = () => {
-    return currentAssessmentType === 'foundational' ? FOUNDATIONAL_DROP_ZONES : COMBINATIONS_DROP_ZONES;
+    switch (currentAssessmentType) {
+      case 'foundational':
+      case 'foundational-subtraction':
+        return FOUNDATIONAL_DROP_ZONES;
+      case 'derived-addition':
+        return DERIVED_ADDITION_DROP_ZONES;
+      case 'combinations':
+        return COMBINATIONS_DROP_ZONES;
+      default:
+        return FOUNDATIONAL_DROP_ZONES;
+    }
+  };
+
+  const getAssessmentTitle = () => {
+    switch (currentAssessmentType) {
+      case 'foundational':
+        return 'Foundational Addition Facts';
+      case 'foundational-subtraction':
+        return 'Foundational Subtraction Facts';
+      case 'derived-addition':
+        return 'Derived Addition Facts';
+      case 'combinations':
+        return 'Combinations & Sums';
+      default:
+        return 'Math Facts Assessment';
+    }
   };
 
   if (showResults) {
@@ -306,24 +489,44 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
           <p className="text-gray-600">Choose an assessment type to begin sorting math facts</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4">
           <div className="p-6 border-2 border-blue-200 rounded-lg bg-blue-50">
             <h4 className="font-semibold text-blue-800 mb-2">Foundational Addition Facts</h4>
             <p className="text-blue-700 text-sm mb-4">
-              Sort addition facts based on how you solve them: know it, use a strategy, or count.
+              Sort addition facts: I Knew It, I Used a Strategy, or I Counted.
             </p>
             <Button onClick={startFoundationalAssessment} className="w-full">
-              Start Foundational Facts
+              Start Assessment
+            </Button>
+          </div>
+
+          <div className="p-6 border-2 border-red-200 rounded-lg bg-red-50">
+            <h4 className="font-semibold text-red-800 mb-2">Foundational Subtraction Facts</h4>
+            <p className="text-red-700 text-sm mb-4">
+              Sort subtraction facts: I Knew It, I Used a Strategy, or I Counted.
+            </p>
+            <Button onClick={startFoundationalSubtractionAssessment} className="w-full">
+              Start Assessment
+            </Button>
+          </div>
+
+          <div className="p-6 border-2 border-green-200 rounded-lg bg-green-50">
+            <h4 className="font-semibold text-green-800 mb-2">Derived Addition Facts</h4>
+            <p className="text-green-700 text-sm mb-4">
+              Sort by strategy: I Knew It, Near Doubles, Make 10, or other strategies.
+            </p>
+            <Button onClick={startDerivedAdditionAssessment} className="w-full">
+              Start Assessment
             </Button>
           </div>
 
           <div className="p-6 border-2 border-purple-200 rounded-lg bg-purple-50">
             <h4 className="font-semibold text-purple-800 mb-2">Combinations & Sums</h4>
             <p className="text-purple-700 text-sm mb-4">
-              Sort addition problems by their sum: less than 10, equal to 10, or more than 10.
+              Sort by sum: less than 10, equal to 10, or more than 10.
             </p>
             <Button onClick={startCombinationsAssessment} className="w-full">
-              Start Combinations Assessment
+              Start Assessment
             </Button>
           </div>
         </div>
@@ -335,7 +538,7 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          {currentAssessmentType === 'foundational' ? 'Foundational Addition Facts' : 'Combinations & Sums'}
+          {getAssessmentTitle()}
         </h3>
         <p className="text-gray-600">
           Drag each math fact card to the category that best describes how you would solve it
