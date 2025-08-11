@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a research-based math fact fluency practice application for middle school students using the Bay-Williams & Kling framework. The application provides interactive tools for developing math fact fluency through foundational facts, derived strategies, games, and assessment tools. It tracks student progress through three phases: counting, deriving, and mastery, while measuring accuracy, efficiency, flexibility, and strategy use.
+This is a research-based math fact fluency practice application for middle school students using the Bay-Williams & Kling framework. The application provides interactive tools for developing math fact fluency through foundational facts, derived strategies, games, and comprehensive assessment tools. It features a complete self-assessment system with eight different assessment types covering all major fact categories, tracks student progress through three phases: counting, deriving, and mastery, while measuring accuracy, efficiency, flexibility, and strategy use.
 
 ## User Preferences
 
@@ -48,3 +48,13 @@ Preferred communication style: Simple, everyday language.
 - **Type Safety**: Full TypeScript coverage with strict type checking
 - **Educational Framework**: Application structure mirrors the Bay-Williams & Kling research framework for math fact fluency
 - **Progressive Enhancement**: Responsive design with mobile-first approach
+- **Comprehensive Self-Assessment**: Eight distinct assessment types covering all major fact categories with drag-and-drop sorting interface
+
+### Recent Major Enhancements (August 2025)
+- **Expanded Self-Assessment System**: Added comprehensive suite of eight assessment types:
+  - Addition & Subtraction Facts: Foundational Addition, Foundational Subtraction, Derived Addition, Derived Subtraction
+  - Multiplication & Division Facts: Foundational Multiplication (2s, 5s, 10s, squares), Derived Multiplication (doubling, near squares, break apart), Derived Division
+  - Special Categories: Combinations & Sums assessment
+- **Research-Based Sorting Categories**: Each assessment uses authentic sorting strategies from pages 25, 29-30, 35-36, 40, and 44 of the Bay-Williams framework
+- **Enhanced UI Design**: Horizontal drop zone layout for better visibility, expression-only math fact cards, organized assessment selection with clear groupings
+- **Authentic Fact Generation**: Generated fact sets match specific examples and problem groupings from the PDF materials
