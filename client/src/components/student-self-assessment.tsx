@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, DragEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { FactCategory, SelfAssessment, InsertSelfAssessment } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -11,46 +10,148 @@ interface StudentSelfAssessmentProps {
   onComplete?: () => void;
 }
 
-const SORTING_CATEGORIES = [
+interface MathFact {
+  id: string;
+  problem: string;
+  answer: number;
+  category: string;
+}
+
+interface DropZone {
+  id: string;
+  title: string;
+  description: string;
+  color: string;
+  icon: string;
+}
+
+// Foundational facts sorting categories based on Bay-Williams & Kling framework
+const FOUNDATIONAL_DROP_ZONES: DropZone[] = [
   {
-    id: "know-quickly",
-    title: "I Know These Quickly",
-    description: "I can solve these fast and I'm confident in my answers",
-    color: "bg-green-100 text-green-800 border-green-300",
-    emoji: "🚀"
+    id: "know-it",
+    title: "I Know It",
+    description: "I can answer this quickly and confidently",
+    color: "bg-green-50 border-green-300 text-green-800",
+    icon: "✓"
   },
   {
-    id: "know-slowly", 
-    title: "I Know These, But Slowly",
-    description: "I can figure these out, but it takes me some time",
-    color: "bg-yellow-100 text-yellow-800 border-yellow-300",
-    emoji: "🤔"
+    id: "used-strategy", 
+    title: "I Used a Strategy",
+    description: "I figured it out using a thinking strategy",
+    color: "bg-blue-50 border-blue-300 text-blue-800",
+    icon: "🧠"
   },
   {
-    id: "still-learning",
-    title: "I'm Still Learning These",
-    description: "These are challenging for me and I need more practice",
-    color: "bg-red-100 text-red-800 border-red-300", 
-    emoji: "📚"
+    id: "counted",
+    title: "I Counted",
+    description: "I had to count to solve this",
+    color: "bg-orange-50 border-orange-300 text-orange-800",
+    icon: "📱"
   }
 ];
 
+// Combinations of 10 sorting categories
+const COMBINATIONS_DROP_ZONES: DropZone[] = [
+  {
+    id: "less-than-10",
+    title: "Less Than 10",
+    description: "The sum is less than 10",
+    color: "bg-red-50 border-red-300 text-red-800",
+    icon: "↓"
+  },
+  {
+    id: "equal-to-10",
+    title: "Equal to 10", 
+    description: "The sum equals exactly 10",
+    color: "bg-green-50 border-green-300 text-green-800",
+    icon: "="
+  },
+  {
+    id: "more-than-10",
+    title: "More Than 10",
+    description: "The sum is greater than 10",
+    color: "bg-purple-50 border-purple-300 text-purple-800",
+    icon: "↑"
+  }
+];
+
+// Generate math facts based on Bay-Williams framework
+const generateFoundationalFacts = (): MathFact[] => {
+  const facts: MathFact[] = [];
+  
+  // +/- 1 or 2 facts
+  for (let i = 1; i <= 10; i++) {
+    facts.push({
+      id: `add-1-${i}`,
+      problem: `${i} + 1`,
+      answer: i + 1,
+      category: 'foundational'
+    });
+    facts.push({
+      id: `add-2-${i}`,
+      problem: `${i} + 2`, 
+      answer: i + 2,
+      category: 'foundational'
+    });
+  }
+  
+  // Doubles facts
+  for (let i = 1; i <= 10; i++) {
+    facts.push({
+      id: `double-${i}`,
+      problem: `${i} + ${i}`,
+      answer: i + i,
+      category: 'foundational'
+    });
+  }
+  
+  // 10 + facts
+  for (let i = 1; i <= 10; i++) {
+    facts.push({
+      id: `ten-plus-${i}`,
+      problem: `10 + ${i}`,
+      answer: 10 + i,
+      category: 'foundational'
+    });
+  }
+  
+  return facts.slice(0, 15); // Limit to manageable set
+};
+
+const generateCombinationsOf10Facts = (): MathFact[] => {
+  const facts: MathFact[] = [];
+  
+  // Generate various addition problems with different sums
+  const problems = [
+    [3, 4], [2, 5], [6, 2], [4, 3], [1, 6], // Less than 10
+    [5, 5], [4, 6], [3, 7], [2, 8], [1, 9], // Equal to 10
+    [6, 7], [5, 8], [7, 6], [8, 5], [9, 4]  // More than 10
+  ];
+  
+  problems.forEach(([a, b], index) => {
+    facts.push({
+      id: `combo-${index}`,
+      problem: `${a} + ${b}`,
+      answer: a + b,
+      category: 'combinations'
+    });
+  });
+  
+  return facts;
+};
+
 export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAssessmentProps) {
-  const [currentCategory, setCurrentCategory] = useState<FactCategory | null>(null);
-  const [sortingChoice, setSortingChoice] = useState<string>("");
+  const [currentAssessmentType, setCurrentAssessmentType] = useState<'foundational' | 'combinations' | null>(null);
+  const [facts, setFacts] = useState<MathFact[]>([]);
+  const [sortedFacts, setSortedFacts] = useState<{ [key: string]: MathFact[] }>({});
+  const [draggedFact, setDraggedFact] = useState<MathFact | null>(null);
   const [confidence, setConfidence] = useState<number>(3);
-  const [notes, setNotes] = useState<string>("");
-  const [assessmentStarted, setAssessmentStarted] = useState(false);
-  const [categoryIndex, setCategoryIndex] = useState(0);
+  const [showResults, setShowResults] = useState(false);
 
   const queryClient = useQueryClient();
 
   const { data: factCategories = [] } = useQuery<FactCategory[]>({
     queryKey: ["/api/fact-categories"],
-  });
-
-  const { data: existingAssessments = [] } = useQuery<SelfAssessment[]>({
-    queryKey: [`/api/students/${studentId}/self-assessments`],
   });
 
   const saveAssessmentMutation = useMutation({
@@ -61,152 +162,135 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
     },
   });
 
-  // Filter out categories that have already been assessed today
-  const unassessedCategories = factCategories.filter(category => {
-    const today = new Date().toDateString();
-    return !existingAssessments.some(assessment => 
-      assessment.factCategoryId === category.id && 
-      assessment.createdAt && new Date(assessment.createdAt).toDateString() === today
-    );
-  });
-
-  useEffect(() => {
-    if (assessmentStarted && unassessedCategories.length > 0) {
-      setCurrentCategory(unassessedCategories[categoryIndex] || null);
-    }
-  }, [assessmentStarted, categoryIndex, unassessedCategories]);
-
-  const handleStartAssessment = () => {
-    if (unassessedCategories.length === 0) {
-      return;
-    }
-    setAssessmentStarted(true);
-    setCategoryIndex(0);
-    setSortingChoice("");
-    setConfidence(3);
-    setNotes("");
+  const startFoundationalAssessment = () => {
+    const foundationalFacts = generateFoundationalFacts();
+    setFacts(foundationalFacts);
+    setCurrentAssessmentType('foundational');
+    setSortedFacts({});
+    setShowResults(false);
   };
 
-  const handleSortingChoice = async (choice: string) => {
-    if (!currentCategory) return;
+  const startCombinationsAssessment = () => {
+    const combinationFacts = generateCombinationsOf10Facts();
+    setFacts(combinationFacts);
+    setCurrentAssessmentType('combinations');
+    setSortedFacts({});
+    setShowResults(false);
+  };
 
-    setSortingChoice(choice);
+  const handleDragStart = (e: DragEvent, fact: MathFact) => {
+    setDraggedFact(fact);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: DragEvent, dropZoneId: string) => {
+    e.preventDefault();
+    if (!draggedFact) return;
+
+    // Remove fact from unsorted facts
+    setFacts(prev => prev.filter(f => f.id !== draggedFact.id));
     
+    // Add fact to sorted category
+    setSortedFacts(prev => ({
+      ...prev,
+      [dropZoneId]: [...(prev[dropZoneId] || []), draggedFact]
+    }));
+    
+    setDraggedFact(null);
+  };
+
+  const handleFactReturn = (fact: MathFact, fromZone: string) => {
+    // Remove from sorted zone
+    setSortedFacts(prev => ({
+      ...prev,
+      [fromZone]: prev[fromZone].filter(f => f.id !== fact.id)
+    }));
+    
+    // Return to unsorted facts
+    setFacts(prev => [...prev, fact]);
+  };
+
+  const completeAssessment = async () => {
+    const totalFacts = Object.values(sortedFacts).flat().length;
+    const unsortedCount = facts.length;
+    
+    if (totalFacts === 0) return;
+
+    // Create summary of sorting results
+    const sortingSummary = Object.entries(sortedFacts).map(([zone, facts]) => ({
+      category: zone,
+      count: facts.length,
+      facts: facts.map(f => f.problem)
+    }));
+
     const assessmentData: InsertSelfAssessment = {
       studentId,
-      factCategoryId: currentCategory.id,
-      sortingChoice: choice,
+      factCategoryId: currentAssessmentType === 'foundational' ? 'foundational-addition' : 'combinations-of-10',
+      sortingChoice: JSON.stringify(sortingSummary),
       confidence,
-      notes: notes.trim() || undefined,
+      notes: `Assessment type: ${currentAssessmentType}. Sorted ${totalFacts} facts, ${unsortedCount} unsorted.`
     };
 
     try {
       await saveAssessmentMutation.mutateAsync(assessmentData);
-      
-      // Move to next category or complete
-      if (categoryIndex < unassessedCategories.length - 1) {
-        setCategoryIndex(categoryIndex + 1);
-        setSortingChoice("");
-        setNotes("");
-        setConfidence(3);
-      } else {
-        setAssessmentStarted(false);
-        onComplete?.();
-      }
+      setShowResults(true);
     } catch (error) {
-      console.error("Failed to save self assessment:", error);
+      console.error('Failed to save assessment:', error);
     }
   };
 
-  const getFactExamples = (category: FactCategory) => {
-    const examples = [];
-    if (category.operation === "addition") {
-      examples.push(`${category.name.includes("1") ? "7 + 1" : category.name.includes("doubles") ? "6 + 6" : "8 + 5"}`);
-      examples.push(`${category.name.includes("1") ? "4 + 1" : category.name.includes("doubles") ? "4 + 4" : "7 + 6"}`);
-    } else if (category.operation === "subtraction") {
-      examples.push(`${category.name.includes("1") ? "8 - 1" : category.name.includes("doubles") ? "12 - 6" : "13 - 5"}`);
-      examples.push(`${category.name.includes("1") ? "5 - 1" : category.name.includes("doubles") ? "8 - 4" : "14 - 6"}`);
-    } else if (category.operation === "multiplication") {
-      examples.push(`${category.name.includes("2") ? "6 × 2" : category.name.includes("5") ? "7 × 5" : "8 × 4"}`);
-      examples.push(`${category.name.includes("2") ? "9 × 2" : category.name.includes("5") ? "6 × 5" : "7 × 6"}`);
-    } else if (category.operation === "division") {
-      examples.push(`${category.name.includes("2") ? "12 ÷ 2" : category.name.includes("5") ? "35 ÷ 5" : "32 ÷ 4"}`);
-      examples.push(`${category.name.includes("2") ? "18 ÷ 2" : category.name.includes("5") ? "30 ÷ 5" : "42 ÷ 6"}`);
-    }
-    return examples;
+  const resetAssessment = () => {
+    setCurrentAssessmentType(null);
+    setFacts([]);
+    setSortedFacts({});
+    setShowResults(false);
   };
 
-  if (!assessmentStarted) {
+  const getCurrentDropZones = () => {
+    return currentAssessmentType === 'foundational' ? FOUNDATIONAL_DROP_ZONES : COMBINATIONS_DROP_ZONES;
+  };
+
+  if (showResults) {
+    const totalSorted = Object.values(sortedFacts).flat().length;
+    
     return (
-      <div className="bg-white p-6 max-w-2xl mx-auto rounded-lg shadow-sm border border-gray-200">
+      <div className="space-y-6">
         <div className="text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">🎯</span>
-          </div>
-          
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Math Facts Self-Assessment</h3>
-          <p className="text-gray-600 mb-6">
-            Help us understand how you feel about different math facts by sorting them into three groups.
-          </p>
-
-          <div className="grid gap-4 mb-6">
-            {SORTING_CATEGORIES.map((category) => (
-              <div key={category.id} className={`border-2 rounded-lg p-4 ${category.color}`}>
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl">{category.emoji}</span>
-                  <h4 className="font-semibold">{category.title}</h4>
-                </div>
-                <p className="text-sm">{category.description}</p>
-              </div>
-            ))}
-          </div>
-
-          {unassessedCategories.length === 0 ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <p className="text-green-700">
-                ✓ You've completed your self-assessment for today! Great job reflecting on your learning.
-              </p>
-            </div>
-          ) : (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-blue-700 text-sm">
-                <strong>Instructions:</strong> You'll see different types of math facts. 
-                Think about how you feel when solving them, then choose which group they belong in.
-                There are no wrong answers - this helps us understand your learning!
-              </p>
-            </div>
-          )}
-
-          <div className="flex gap-3 justify-center">
-            <Button 
-              onClick={handleStartAssessment}
-              disabled={unassessedCategories.length === 0}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {unassessedCategories.length === 0 ? "Assessment Complete" : "Start Self-Assessment"}
-            </Button>
-          </div>
-
-          {unassessedCategories.length > 0 && (
-            <p className="text-sm text-gray-500 mt-3">
-              {unassessedCategories.length} fact areas to assess
-            </p>
-          )}
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Assessment Complete!</h3>
+          <p className="text-gray-600">You sorted {totalSorted} math facts. Great job reflecting on your learning!</p>
         </div>
-      </div>
-    );
-  }
 
-  if (!currentCategory) {
-    return (
-      <div className="bg-white p-6 max-w-2xl mx-auto rounded-lg shadow-sm border border-gray-200">
-        <div className="text-center">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Assessment Complete!</h3>
-          <p className="text-gray-600 mb-4">
-            Thank you for sharing how you feel about these math facts. 
-            This information helps your teacher understand your learning.
-          </p>
-          <Button onClick={() => setAssessmentStarted(false)} className="bg-blue-600 hover:bg-blue-700">
+        <div className="grid gap-4">
+          {getCurrentDropZones().map(zone => {
+            const zoneFacts = sortedFacts[zone.id] || [];
+            return (
+              <div key={zone.id} className={`p-4 rounded-lg border-2 ${zone.color}`}>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <span>{zone.icon}</span>
+                  {zone.title} ({zoneFacts.length} facts)
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {zoneFacts.map(fact => (
+                    <Badge key={fact.id} variant="secondary" className="text-sm">
+                      {fact.problem}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex gap-3 justify-center">
+          <Button onClick={resetAssessment} variant="outline">
+            Try Another Assessment
+          </Button>
+          <Button onClick={onComplete}>
             Finish
           </Button>
         </div>
@@ -214,111 +298,148 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
     );
   }
 
-  const examples = getFactExamples(currentCategory);
-  const progress = categoryIndex + 1;
-  const total = unassessedCategories.length;
-
-  return (
-    <div className="bg-white p-6 max-w-3xl mx-auto rounded-lg shadow-sm border border-gray-200">
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-gray-800">Self-Assessment</h3>
-          <Badge variant="outline" className="text-sm">
-            {progress} of {total}
-          </Badge>
+  if (!currentAssessmentType) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Student Self-Assessment</h3>
+          <p className="text-gray-600">Choose an assessment type to begin sorting math facts</p>
         </div>
-        
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-          <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${(progress / total) * 100}%` }}
-          ></div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="p-6 border-2 border-blue-200 rounded-lg bg-blue-50">
+            <h4 className="font-semibold text-blue-800 mb-2">Foundational Addition Facts</h4>
+            <p className="text-blue-700 text-sm mb-4">
+              Sort addition facts based on how you solve them: know it, use a strategy, or count.
+            </p>
+            <Button onClick={startFoundationalAssessment} className="w-full">
+              Start Foundational Facts
+            </Button>
+          </div>
+
+          <div className="p-6 border-2 border-purple-200 rounded-lg bg-purple-50">
+            <h4 className="font-semibold text-purple-800 mb-2">Combinations & Sums</h4>
+            <p className="text-purple-700 text-sm mb-4">
+              Sort addition problems by their sum: less than 10, equal to 10, or more than 10.
+            </p>
+            <Button onClick={startCombinationsAssessment} className="w-full">
+              Start Combinations Assessment
+            </Button>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <h4 className="text-lg font-medium text-gray-800 mb-3">{currentCategory.name}</h4>
-        <p className="text-gray-600 mb-4">{currentCategory.description}</p>
-        
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-sm font-medium text-gray-700 mb-3">Example problems:</p>
-          <div className="flex gap-4 text-lg font-mono">
-            {examples.map((example, index) => (
-              <div key={index} className="bg-blue-50 px-3 py-2 rounded border">
-                {example}
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">
+          {currentAssessmentType === 'foundational' ? 'Foundational Addition Facts' : 'Combinations & Sums'}
+        </h3>
+        <p className="text-gray-600">
+          Drag each math fact card to the category that best describes how you would solve it
+        </p>
+      </div>
+
+      {/* Unsorted Facts */}
+      {facts.length > 0 && (
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h4 className="font-medium text-gray-700 mb-3">Math Facts to Sort ({facts.length} remaining)</h4>
+          <div className="flex flex-wrap gap-2">
+            {facts.map(fact => (
+              <div
+                key={fact.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, fact)}
+                className="bg-white border-2 border-gray-200 rounded-lg p-3 cursor-move hover:border-blue-300 hover:shadow-md transition-all"
+              >
+                <div className="text-lg font-mono text-center">{fact.problem}</div>
+                <div className="text-xs text-gray-500 text-center mt-1">= {fact.answer}</div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="mb-6">
-        <p className="text-lg font-medium text-gray-800 mb-4">
-          How do you feel about solving these types of problems?
-        </p>
-        
-        <div className="grid gap-3">
-          {SORTING_CATEGORIES.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => handleSortingChoice(category.id)}
-              className={`border-2 rounded-lg p-4 text-left transition-all hover:shadow-md ${
-                sortingChoice === category.id 
-                  ? category.color.replace("100", "200") + " shadow-md" 
-                  : category.color + " hover:bg-opacity-80"
-              }`}
-              disabled={saveAssessmentMutation.isPending}
+      {/* Drop Zones */}
+      <div className="grid gap-4">
+        {getCurrentDropZones().map(zone => {
+          const zoneFacts = sortedFacts[zone.id] || [];
+          return (
+            <div
+              key={zone.id}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, zone.id)}
+              className={`min-h-24 p-4 rounded-lg border-2 border-dashed ${zone.color} transition-all hover:border-solid hover:shadow-md`}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-2xl">{category.emoji}</span>
-                <h4 className="font-semibold">{category.title}</h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <span className="text-xl">{zone.icon}</span>
+                  {zone.title}
+                </h4>
+                <Badge variant="outline">{zoneFacts.length}</Badge>
               </div>
-              <p className="text-sm">{category.description}</p>
-            </button>
-          ))}
-        </div>
+              <p className="text-sm opacity-75 mb-3">{zone.description}</p>
+              
+              {zoneFacts.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {zoneFacts.map(fact => (
+                    <div
+                      key={fact.id}
+                      onClick={() => handleFactReturn(fact, zone.id)}
+                      className="bg-white border rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="text-sm font-mono">{fact.problem}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {zoneFacts.length === 0 && (
+                <div className="text-center py-4 text-gray-400">
+                  Drop math facts here
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Confidence Level (1 = Not confident, 5 = Very confident)
-        </label>
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((level) => (
+      {/* Confidence Rating */}
+      <div className="bg-white border rounded-lg p-4">
+        <h4 className="font-medium text-gray-700 mb-3">How confident do you feel about these facts?</h4>
+        <div className="flex gap-2 justify-center">
+          {[1, 2, 3, 4, 5].map(rating => (
             <button
-              key={level}
-              onClick={() => setConfidence(level)}
-              className={`w-12 h-12 rounded-full border-2 transition-all ${
-                confidence === level
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"
+              key={rating}
+              onClick={() => setConfidence(rating)}
+              className={`w-12 h-12 rounded-full border-2 font-semibold transition-all ${
+                confidence === rating
+                  ? 'bg-blue-500 text-white border-blue-500'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-300'
               }`}
             >
-              {level}
+              {rating}
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="mb-6">
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-          Any thoughts or notes? (Optional)
-        </label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Share any thoughts about these problems..."
-          className="w-full"
-          rows={3}
-        />
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-700">
-          <strong>Remember:</strong> There are no right or wrong answers here. 
-          We want to understand how YOU feel about these math facts to help with your learning.
+        <p className="text-center text-xs text-gray-500 mt-2">
+          1 = Not confident • 5 = Very confident
         </p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3 justify-center">
+        <Button onClick={resetAssessment} variant="outline">
+          Start Over
+        </Button>
+        <Button 
+          onClick={completeAssessment}
+          disabled={Object.values(sortedFacts).flat().length === 0}
+        >
+          Complete Assessment
+        </Button>
       </div>
     </div>
   );
