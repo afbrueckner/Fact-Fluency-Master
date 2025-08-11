@@ -256,7 +256,7 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
                     </Badge>
                   </div>
                   <p className="text-xs text-gray-500">
-                    {observation.factArea} • {observation.phase} • {observation.createdAt?.toLocaleDateString()}
+                    {observation.factArea} • {observation.phase} • {observation.createdAt ? new Date(observation.createdAt).toLocaleDateString() : 'Recent'}
                   </p>
                 </div>
               </div>
