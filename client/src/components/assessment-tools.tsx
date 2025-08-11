@@ -2,6 +2,9 @@ import { useState } from "react";
 import { AssessmentObservation } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StrategyInterview } from "./strategy-interview";
+import { PhaseAssessment } from "./phase-assessment";
+import { AssessmentAnalytics } from "./assessment-analytics";
 
 interface AssessmentToolsProps {
   observations: AssessmentObservation[];
@@ -15,6 +18,9 @@ interface AssessmentToolsProps {
 
 export function AssessmentTools({ observations, onAddObservation }: AssessmentToolsProps) {
   const [showNewObservation, setShowNewObservation] = useState(false);
+  const [showStrategyInterview, setShowStrategyInterview] = useState(false);
+  const [showPhaseAssessment, setShowPhaseAssessment] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [newObservation, setNewObservation] = useState({
     observationType: "",
     content: "",
@@ -35,6 +41,30 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
     }
   };
 
+  const handleInterviewComplete = (results: any) => {
+    // Convert interview results to observation
+    const observation = {
+      observationType: "interview",
+      content: `Strategy Interview: ${results.accuracy}% accuracy, ${results.overallPhase} phase. Strategies observed: ${results.strategiesObserved.join(", ")}`,
+      factArea: results.factArea,
+      phase: results.overallPhase
+    };
+    onAddObservation(observation);
+    setShowStrategyInterview(false);
+  };
+
+  const handlePhaseAssessmentComplete = (results: any) => {
+    // Convert phase assessment results to observation
+    const observation = {
+      observationType: "phase-assessment",
+      content: `Phase Assessment: ${results.overallPhase} phase (${results.confidence}% confidence). Key indicators: ${results.indicators.filter((i: any) => i.observed).map((i: any) => i.behavior).slice(0, 3).join(", ")}`,
+      factArea: results.factArea,
+      phase: results.overallPhase
+    };
+    onAddObservation(observation);
+    setShowPhaseAssessment(false);
+  };
+
   const getObservationTypeColor = (type: string) => {
     switch (type) {
       case "strategy":
@@ -43,6 +73,10 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
         return "bg-green-100 text-green-800";
       case "communication":
         return "bg-purple-100 text-purple-800";
+      case "interview":
+        return "bg-indigo-100 text-indigo-800";
+      case "phase-assessment":
+        return "bg-violet-100 text-violet-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -78,6 +112,7 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
             <Button 
               size="sm"
               className="mt-2 bg-blue-100 text-blue-800 hover:bg-blue-200"
+              onClick={() => setShowStrategyInterview(true)}
             >
               Start Interview
             </Button>
@@ -85,29 +120,31 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
           
           <div className="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-purple-800">Self-Assessment</h4>
+              <h4 className="font-medium text-purple-800">Phase Assessment</h4>
               <i className="fas fa-user-check text-purple-600"></i>
             </div>
-            <p className="text-sm text-purple-700 mt-1">Student reflection on their own learning</p>
+            <p className="text-sm text-purple-700 mt-1">Determine student's current learning phase</p>
             <Button 
               size="sm"
               className="mt-2 bg-purple-100 text-purple-800 hover:bg-purple-200"
+              onClick={() => setShowPhaseAssessment(true)}
             >
-              View Reflections
+              Start Assessment
             </Button>
           </div>
           
           <div className="bg-orange-50 rounded-lg p-4 border-l-4 border-orange-500">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-orange-800">Writing Prompts</h4>
-              <i className="fas fa-pencil-alt text-orange-600"></i>
+              <h4 className="font-medium text-orange-800">Progress Analytics</h4>
+              <i className="fas fa-chart-line text-orange-600"></i>
             </div>
-            <p className="text-sm text-orange-700 mt-1">Written explanations of problem-solving</p>
+            <p className="text-sm text-orange-700 mt-1">Comprehensive progress analysis and insights</p>
             <Button 
               size="sm"
               className="mt-2 bg-orange-100 text-orange-800 hover:bg-orange-200"
+              onClick={() => setShowAnalytics(true)}
             >
-              Assign Prompt
+              View Analytics
             </Button>
           </div>
         </div>
@@ -234,6 +271,49 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
           )}
         </div>
       </div>
+
+      {/* Strategy Interview Modal */}
+      {showStrategyInterview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <StrategyInterview
+              onComplete={handleInterviewComplete}
+              onCancel={() => setShowStrategyInterview(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Phase Assessment Modal */}
+      {showPhaseAssessment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <PhaseAssessment
+              onComplete={handlePhaseAssessmentComplete}
+              onCancel={() => setShowPhaseAssessment(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Modal */}
+      {showAnalytics && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-800">Assessment Analytics</h3>
+              <Button
+                variant="outline"
+                onClick={() => setShowAnalytics(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕ Close
+              </Button>
+            </div>
+            <AssessmentAnalytics studentId="student-1" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
