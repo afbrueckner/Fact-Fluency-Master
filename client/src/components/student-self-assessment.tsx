@@ -555,10 +555,9 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
                 key={fact.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, fact)}
-                className="bg-white border-2 border-gray-200 rounded-lg p-3 cursor-move hover:border-blue-300 hover:shadow-md transition-all"
+                className="bg-white border-2 border-gray-200 rounded-lg p-4 cursor-move hover:border-blue-300 hover:shadow-md transition-all min-w-[80px]"
               >
-                <div className="text-lg font-mono text-center">{fact.problem}</div>
-                <div className="text-xs text-gray-500 text-center mt-1">= {fact.answer}</div>
+                <div className="text-lg font-mono text-center font-semibold">{fact.problem}</div>
               </div>
             ))}
           </div>
@@ -566,7 +565,7 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
       )}
 
       {/* Drop Zones */}
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {getCurrentDropZones().map(zone => {
           const zoneFacts = sortedFacts[zone.id] || [];
           return (
@@ -574,34 +573,36 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
               key={zone.id}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, zone.id)}
-              className={`min-h-24 p-4 rounded-lg border-2 border-dashed ${zone.color} transition-all hover:border-solid hover:shadow-md`}
+              className={`min-h-32 p-3 rounded-lg border-2 border-dashed ${zone.color} transition-all hover:border-solid hover:shadow-md`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <span className="text-xl">{zone.icon}</span>
+              <div className="flex flex-col items-center mb-2">
+                <div className="flex items-center gap-1 mb-1">
+                  <span className="text-lg">{zone.icon}</span>
+                  <Badge variant="outline" className="text-xs">{zoneFacts.length}</Badge>
+                </div>
+                <h4 className="font-semibold text-center text-sm leading-tight">
                   {zone.title}
                 </h4>
-                <Badge variant="outline">{zoneFacts.length}</Badge>
               </div>
-              <p className="text-sm opacity-75 mb-3">{zone.description}</p>
+              <p className="text-xs opacity-75 mb-3 text-center leading-tight">{zone.description}</p>
               
               {zoneFacts.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1 justify-center">
                   {zoneFacts.map(fact => (
                     <div
                       key={fact.id}
                       onClick={() => handleFactReturn(fact, zone.id)}
-                      className="bg-white border rounded-lg p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="bg-white border rounded p-1 cursor-pointer hover:bg-gray-50 transition-colors text-xs font-mono"
                     >
-                      <div className="text-sm font-mono">{fact.problem}</div>
+                      {fact.problem}
                     </div>
                   ))}
                 </div>
               )}
               
               {zoneFacts.length === 0 && (
-                <div className="text-center py-4 text-gray-400">
-                  Drop math facts here
+                <div className="text-center py-3 text-gray-400 text-xs">
+                  Drop facts here
                 </div>
               )}
             </div>
