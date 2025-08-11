@@ -78,6 +78,16 @@ export const quickLooksSessions = pgTable("quick_looks_sessions", {
   completedAt: timestamp("completed_at").defaultNow(),
 });
 
+export const selfAssessments = pgTable("self_assessments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").references(() => students.id).notNull(),
+  factCategoryId: varchar("fact_category_id").references(() => factCategories.id).notNull(),
+  sortingChoice: text("sorting_choice").notNull(), // "know-quickly", "know-slowly", "still-learning"
+  confidence: integer("confidence").notNull(), // 1-5 scale
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertStudentSchema = createInsertSchema(students).omit({
   id: true,
   createdAt: true,
@@ -104,6 +114,11 @@ export const insertQuickLooksSessionSchema = createInsertSchema(quickLooksSessio
   completedAt: true,
 });
 
+export const insertSelfAssessmentSchema = createInsertSchema(selfAssessments).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Student = typeof students.$inferSelect;
 export type InsertStudent = z.infer<typeof insertStudentSchema>;
 export type FactCategory = typeof factCategories.$inferSelect;
@@ -116,3 +131,5 @@ export type AssessmentObservation = typeof assessmentObservations.$inferSelect;
 export type InsertAssessmentObservation = z.infer<typeof insertAssessmentObservationSchema>;
 export type QuickLooksSession = typeof quickLooksSessions.$inferSelect;
 export type InsertQuickLooksSession = z.infer<typeof insertQuickLooksSessionSchema>;
+export type SelfAssessment = typeof selfAssessments.$inferSelect;
+export type InsertSelfAssessment = z.infer<typeof insertSelfAssessmentSchema>;

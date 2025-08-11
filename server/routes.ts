@@ -6,7 +6,8 @@ import {
   insertStudentProgressSchema,
   insertGameResultSchema,
   insertAssessmentObservationSchema,
-  insertQuickLooksSessionSchema
+  insertQuickLooksSessionSchema,
+  insertSelfAssessmentSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -166,6 +167,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(sessions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch Quick Looks sessions" });
+    }
+  });
+
+  // Self Assessment routes
+  app.post("/api/students/:studentId/self-assessments", async (req, res) => {
+    try {
+      const data = insertSelfAssessmentSchema.parse({
+        ...req.body,
+        studentId: req.params.studentId
+      });
+      const assessment = await storage.saveSelfAssessment(data);
+      res.status(201).json(assessment);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid self assessment data" });
+    }
+  });
+
+  app.get("/api/students/:studentId/self-assessments", async (req, res) => {
+    try {
+      const assessments = await storage.getSelfAssessments(req.params.studentId);
+      res.json(assessments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch self assessments" });
+    }
+  });
+
+  app.patch("/api/self-assessments/:id", async (req, res) => {
+    try {
+      const updates = insertSelfAssessmentSchema.partial().parse(req.body);
+      const assessment = await storage.updateSelfAssessment(req.params.id, updates);
+      res.json(assessment);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid self assessment data" });
     }
   });
 

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { StrategyInterview } from "./strategy-interview";
 import { PhaseAssessment } from "./phase-assessment";
 import { AssessmentAnalytics } from "./assessment-analytics";
+import { StudentSelfAssessment } from "./student-self-assessment";
 
 interface AssessmentToolsProps {
   observations: AssessmentObservation[];
@@ -21,6 +22,7 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
   const [showStrategyInterview, setShowStrategyInterview] = useState(false);
   const [showPhaseAssessment, setShowPhaseAssessment] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showSelfAssessment, setShowSelfAssessment] = useState(false);
   const [newObservation, setNewObservation] = useState({
     observationType: "",
     content: "",
@@ -65,6 +67,17 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
     setShowPhaseAssessment(false);
   };
 
+  const handleSelfAssessmentComplete = () => {
+    const observation = {
+      observationType: "self-assessment",
+      content: "Student completed self-assessment using sorting mats framework. Results logged separately for detailed analysis.",
+      factArea: "Multiple Areas",
+      phase: "Self-Reported"
+    };
+    onAddObservation(observation);
+    setShowSelfAssessment(false);
+  };
+
   const getObservationTypeColor = (type: string) => {
     switch (type) {
       case "strategy":
@@ -77,6 +90,8 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
         return "bg-indigo-100 text-indigo-800";
       case "phase-assessment":
         return "bg-violet-100 text-violet-800";
+      case "self-assessment":
+        return "bg-pink-100 text-pink-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -130,6 +145,21 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
               onClick={() => setShowPhaseAssessment(true)}
             >
               Start Assessment
+            </Button>
+          </div>
+          
+          <div className="bg-pink-50 rounded-lg p-4 border-l-4 border-pink-500">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-pink-800">Student Self-Assessment</h4>
+              <i className="fas fa-user-graduate text-pink-600"></i>
+            </div>
+            <p className="text-sm text-pink-700 mt-1">Students sort facts using the Bay-Williams sorting mats framework</p>
+            <Button 
+              size="sm"
+              className="mt-2 bg-pink-100 text-pink-800 hover:bg-pink-200"
+              onClick={() => setShowSelfAssessment(true)}
+            >
+              Start Self-Assessment
             </Button>
           </div>
           
@@ -292,6 +322,30 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
               onComplete={handlePhaseAssessmentComplete}
               onCancel={() => setShowPhaseAssessment(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Self Assessment Modal */}
+      {showSelfAssessment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Student Self-Assessment</h3>
+              <Button
+                variant="outline"
+                onClick={() => setShowSelfAssessment(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕ Close
+              </Button>
+            </div>
+            <div className="p-6">
+              <StudentSelfAssessment
+                studentId="student-1"
+                onComplete={handleSelfAssessmentComplete}
+              />
+            </div>
           </div>
         </div>
       )}

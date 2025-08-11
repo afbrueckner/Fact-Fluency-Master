@@ -10,7 +10,9 @@ import {
   type AssessmentObservation,
   type InsertAssessmentObservation,
   type QuickLooksSession,
-  type InsertQuickLooksSession
+  type InsertQuickLooksSession,
+  type SelfAssessment,
+  type InsertSelfAssessment
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -44,6 +46,11 @@ export interface IStorage {
   // Quick Looks Sessions
   saveQuickLooksSession(session: InsertQuickLooksSession): Promise<QuickLooksSession>;
   getQuickLooksSessions(studentId: string): Promise<QuickLooksSession[]>;
+  
+  // Self Assessments
+  saveSelfAssessment(assessment: InsertSelfAssessment): Promise<SelfAssessment>;
+  getSelfAssessments(studentId: string): Promise<SelfAssessment[]>;
+  updateSelfAssessment(id: string, updates: Partial<InsertSelfAssessment>): Promise<SelfAssessment>;
 }
 
 export class MemStorage implements IStorage {
@@ -54,6 +61,7 @@ export class MemStorage implements IStorage {
   private gameResults: Map<string, GameResult>;
   private observations: Map<string, AssessmentObservation>;
   private quickLooksSessions: Map<string, QuickLooksSession>;
+  private selfAssessments: Map<string, SelfAssessment>;
 
   constructor() {
     this.students = new Map();
@@ -63,6 +71,7 @@ export class MemStorage implements IStorage {
     this.gameResults = new Map();
     this.observations = new Map();
     this.quickLooksSessions = new Map();
+    this.selfAssessments = new Map();
     
     this.initializeDefaultData();
   }
@@ -406,6 +415,37 @@ export class MemStorage implements IStorage {
     return Array.from(this.quickLooksSessions.values()).filter(
       session => session.studentId === studentId
     );
+  }
+
+  async saveSelfAssessment(insertAssessment: InsertSelfAssessment): Promise<SelfAssessment> {
+    const id = randomUUID();
+    const assessment: SelfAssessment = {
+      ...insertAssessment,
+      id,
+      createdAt: new Date(),
+    };
+    this.selfAssessments.set(id, assessment);
+    return assessment;
+  }
+
+  async getSelfAssessments(studentId: string): Promise<SelfAssessment[]> {
+    return Array.from(this.selfAssessments.values()).filter(
+      assessment => assessment.studentId === studentId
+    );
+  }
+
+  async updateSelfAssessment(id: string, updates: Partial<InsertSelfAssessment>): Promise<SelfAssessment> {
+    const existing = this.selfAssessments.get(id);
+    if (!existing) {
+      throw new Error(`Self assessment with id ${id} not found`);
+    }
+    
+    const updated: SelfAssessment = {
+      ...existing,
+      ...updates,
+    };
+    this.selfAssessments.set(id, updated);
+    return updated;
   }
 }
 
