@@ -114,6 +114,141 @@ const COMBINATIONS_DROP_ZONES: DropZone[] = [
   }
 ];
 
+// Derived subtraction sorting categories (page 25)
+const DERIVED_SUBTRACTION_DROP_ZONES: DropZone[] = [
+  {
+    id: "just-knew-it",
+    title: "Just Knew It",
+    description: "I just knew the answer automatically",
+    color: "bg-green-50 border-green-300 text-green-800",
+    icon: "⚡"
+  },
+  {
+    id: "think-addition",
+    title: "Think Addition",
+    description: "I thought about what plus what equals",
+    color: "bg-blue-50 border-blue-300 text-blue-800",
+    icon: "➕"
+  },
+  {
+    id: "anchor-to-10",
+    title: "Anchor to 10",
+    description: "I used 10 as a reference point",
+    color: "bg-purple-50 border-purple-300 text-purple-800",
+    icon: "🎯"
+  },
+  {
+    id: "counting-back",
+    title: "Counting Back",
+    description: "I counted backwards from the first number",
+    color: "bg-orange-50 border-orange-300 text-orange-800",
+    icon: "⬅️"
+  },
+  {
+    id: "counting-up",
+    title: "Counting Up",
+    description: "I counted up from the second number",
+    color: "bg-red-50 border-red-300 text-red-800",
+    icon: "⬆️"
+  }
+];
+
+// Foundational multiplication sorting categories (pages 29-30)
+const FOUNDATIONAL_MULTIPLICATION_DROP_ZONES: DropZone[] = [
+  {
+    id: "automatic",
+    title: "I Knew It/Automatic",
+    description: "I just knew the answer automatically",
+    color: "bg-green-50 border-green-300 text-green-800",
+    icon: "⚡"
+  },
+  {
+    id: "strategy",
+    title: "I Used a Strategy",
+    description: "I used a strategy to figure it out",
+    color: "bg-blue-50 border-blue-300 text-blue-800",
+    icon: "🧠"
+  },
+  {
+    id: "skip-counted",
+    title: "I Skip Counted",
+    description: "I skip counted to find the answer",
+    color: "bg-orange-50 border-orange-300 text-orange-800",
+    icon: "🔢"
+  }
+];
+
+// Derived multiplication sorting categories (pages 35-36, 40)
+const DERIVED_MULTIPLICATION_DROP_ZONES: DropZone[] = [
+  {
+    id: "knew-it",
+    title: "Just Knew It",
+    description: "I just knew the answer automatically",
+    color: "bg-green-50 border-green-300 text-green-800",
+    icon: "⚡"
+  },
+  {
+    id: "doubling",
+    title: "Doubling",
+    description: "I used doubling strategies",
+    color: "bg-blue-50 border-blue-300 text-blue-800",
+    icon: "×2"
+  },
+  {
+    id: "near-squares",
+    title: "Near Squares",
+    description: "I used squares plus or minus",
+    color: "bg-purple-50 border-purple-300 text-purple-800",
+    icon: "⬜"
+  },
+  {
+    id: "adding-group",
+    title: "Adding a Group or Break Apart",
+    description: "I added groups or broke apart numbers",
+    color: "bg-yellow-50 border-yellow-300 text-yellow-800",
+    icon: "➕"
+  },
+  {
+    id: "subtract-group",
+    title: "Subtract a Group",
+    description: "I subtracted a group from a larger product",
+    color: "bg-orange-50 border-orange-300 text-orange-800",
+    icon: "➖"
+  },
+  {
+    id: "skip-counting",
+    title: "Counting/Skip Counting",
+    description: "I counted or skip counted",
+    color: "bg-red-50 border-red-300 text-red-800",
+    icon: "🔢"
+  }
+];
+
+// Derived division sorting categories (page 44)
+const DERIVED_DIVISION_DROP_ZONES: DropZone[] = [
+  {
+    id: "knew-it",
+    title: "Knew It",
+    description: "I just knew the answer automatically",
+    color: "bg-green-50 border-green-300 text-green-800",
+    icon: "⚡"
+  },
+  {
+    id: "think-multiplication",
+    title: "Think Multiplication",
+    description: "I thought about multiplication facts",
+    color: "bg-blue-50 border-blue-300 text-blue-800",
+    icon: "×"
+  },
+  {
+    id: "skip-counted",
+    title: "Skip Counted",
+    description: "I skip counted to find the answer",
+    color: "bg-orange-50 border-orange-300 text-orange-800",
+    icon: "🔢"
+  }
+];
+
 // Generate math facts based on Bay-Williams framework
 const generateFoundationalFacts = (): MathFact[] => {
   const facts: MathFact[] = [];
@@ -282,8 +417,151 @@ const generateCombinationsOf10Facts = (): MathFact[] => {
   return facts;
 };
 
+// Generate derived subtraction facts (page 25)
+const generateDerivedSubtractionFacts = (): MathFact[] => {
+  const facts: MathFact[] = [];
+  
+  // Various subtraction problems that require different strategies
+  const subtractionProblems = [
+    [13, 7], [15, 8], [14, 6], [12, 5], [16, 9], // Think addition/counting up
+    [17, 8], [15, 7], [13, 6], [14, 8], [12, 7], // Anchor to 10 strategies
+    [11, 4], [12, 3], [15, 6], [13, 4], [14, 5]  // Counting back strategies
+  ];
+  
+  subtractionProblems.forEach(([a, b], index) => {
+    facts.push({
+      id: `derived-sub-${index}`,
+      problem: `${a} - ${b}`,
+      answer: a - b,
+      category: 'derived-subtraction'
+    });
+  });
+  
+  return facts.slice(0, 15);
+};
+
+// Generate foundational multiplication facts (pages 29-30)
+const generateFoundationalMultiplicationFacts = (): MathFact[] => {
+  const facts: MathFact[] = [];
+  
+  // 2s facts
+  const twos = [2, 4, 6, 8, 10];
+  twos.forEach(num => {
+    facts.push({
+      id: `mult-2-${num}`,
+      problem: `2 × ${num/2}`,
+      answer: num,
+      category: 'foundational-multiplication'
+    });
+  });
+  
+  // 10s facts
+  const tens = [1, 2, 3, 4, 5];
+  tens.forEach(num => {
+    facts.push({
+      id: `mult-10-${num}`,
+      problem: `10 × ${num}`,
+      answer: num * 10,
+      category: 'foundational-multiplication'
+    });
+  });
+  
+  // 5s facts
+  const fives = [1, 2, 3, 4, 6];
+  fives.forEach(num => {
+    facts.push({
+      id: `mult-5-${num}`,
+      problem: `5 × ${num}`,
+      answer: num * 5,
+      category: 'foundational-multiplication'
+    });
+  });
+  
+  // Squares
+  const squares = [2, 3, 4, 5];
+  squares.forEach(num => {
+    facts.push({
+      id: `mult-square-${num}`,
+      problem: `${num} × ${num}`,
+      answer: num * num,
+      category: 'foundational-multiplication'
+    });
+  });
+  
+  return facts.slice(0, 15);
+};
+
+// Generate derived multiplication facts (pages 35-36, 40)
+const generateDerivedMultiplicationFacts = (): MathFact[] => {
+  const facts: MathFact[] = [];
+  
+  // Doubling strategies (4s as double 2s)
+  const doublingFacts = [
+    [4, 3], [4, 5], [4, 6], [4, 7], [4, 8]
+  ];
+  doublingFacts.forEach(([a, b], index) => {
+    facts.push({
+      id: `mult-doubling-${index}`,
+      problem: `${a} × ${b}`,
+      answer: a * b,
+      category: 'derived-multiplication'
+    });
+  });
+  
+  // Near squares strategies
+  const nearSquares = [
+    [3, 4], [5, 6], [6, 7], [7, 8], [8, 9]
+  ];
+  nearSquares.forEach(([a, b], index) => {
+    facts.push({
+      id: `mult-near-square-${index}`,
+      problem: `${a} × ${b}`,
+      answer: a * b,
+      category: 'derived-multiplication'
+    });
+  });
+  
+  // Breaking apart strategies
+  const breakApart = [
+    [6, 8], [7, 6], [8, 6], [9, 6], [7, 9]
+  ];
+  breakApart.forEach(([a, b], index) => {
+    facts.push({
+      id: `mult-break-apart-${index}`,
+      problem: `${a} × ${b}`,
+      answer: a * b,
+      category: 'derived-multiplication'
+    });
+  });
+  
+  return facts.slice(0, 15);
+};
+
+// Generate derived division facts (page 44)
+const generateDerivedDivisionFacts = (): MathFact[] => {
+  const facts: MathFact[] = [];
+  
+  // Division facts that relate to multiplication
+  const divisionProblems = [
+    [24, 6], [35, 7], [48, 8], [54, 9], [42, 6], // Think multiplication
+    [36, 4], [45, 5], [28, 4], [32, 8], [21, 3], // Various strategies
+    [18, 2], [40, 5], [30, 6], [56, 7], [72, 8]  // Skip counting strategies
+  ];
+  
+  divisionProblems.forEach(([dividend, divisor], index) => {
+    facts.push({
+      id: `div-${index}`,
+      problem: `${dividend} ÷ ${divisor}`,
+      answer: dividend / divisor,
+      category: 'derived-division'
+    });
+  });
+  
+  return facts.slice(0, 15);
+};
+
 export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAssessmentProps) {
-  const [currentAssessmentType, setCurrentAssessmentType] = useState<'foundational' | 'foundational-subtraction' | 'derived-addition' | 'combinations' | null>(null);
+  const [currentAssessmentType, setCurrentAssessmentType] = useState<'foundational' | 'foundational-subtraction' | 'derived-addition' | 'combinations' | 'derived-subtraction' | 'foundational-multiplication' | 'derived-multiplication' | 'derived-division' | null>(null);
   const [facts, setFacts] = useState<MathFact[]>([]);
   const [sortedFacts, setSortedFacts] = useState<{ [key: string]: MathFact[] }>({});
   const [draggedFact, setDraggedFact] = useState<MathFact | null>(null);
@@ -332,6 +610,38 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
     const combinationFacts = generateCombinationsOf10Facts();
     setFacts(combinationFacts);
     setCurrentAssessmentType('combinations');
+    setSortedFacts({});
+    setShowResults(false);
+  };
+
+  const startDerivedSubtractionAssessment = () => {
+    const derivedSubFacts = generateDerivedSubtractionFacts();
+    setFacts(derivedSubFacts);
+    setCurrentAssessmentType('derived-subtraction');
+    setSortedFacts({});
+    setShowResults(false);
+  };
+
+  const startFoundationalMultiplicationAssessment = () => {
+    const foundMultFacts = generateFoundationalMultiplicationFacts();
+    setFacts(foundMultFacts);
+    setCurrentAssessmentType('foundational-multiplication');
+    setSortedFacts({});
+    setShowResults(false);
+  };
+
+  const startDerivedMultiplicationAssessment = () => {
+    const derivedMultFacts = generateDerivedMultiplicationFacts();
+    setFacts(derivedMultFacts);
+    setCurrentAssessmentType('derived-multiplication');
+    setSortedFacts({});
+    setShowResults(false);
+  };
+
+  const startDerivedDivisionAssessment = () => {
+    const derivedDivFacts = generateDerivedDivisionFacts();
+    setFacts(derivedDivFacts);
+    setCurrentAssessmentType('derived-division');
     setSortedFacts({});
     setShowResults(false);
   };
@@ -416,6 +726,14 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
         return FOUNDATIONAL_DROP_ZONES;
       case 'derived-addition':
         return DERIVED_ADDITION_DROP_ZONES;
+      case 'derived-subtraction':
+        return DERIVED_SUBTRACTION_DROP_ZONES;
+      case 'foundational-multiplication':
+        return FOUNDATIONAL_MULTIPLICATION_DROP_ZONES;
+      case 'derived-multiplication':
+        return DERIVED_MULTIPLICATION_DROP_ZONES;
+      case 'derived-division':
+        return DERIVED_DIVISION_DROP_ZONES;
       case 'combinations':
         return COMBINATIONS_DROP_ZONES;
       default:
@@ -431,6 +749,14 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
         return 'Foundational Subtraction Facts';
       case 'derived-addition':
         return 'Derived Addition Facts';
+      case 'derived-subtraction':
+        return 'Derived Subtraction Facts';
+      case 'foundational-multiplication':
+        return 'Foundational Multiplication Facts';
+      case 'derived-multiplication':
+        return 'Derived Multiplication Facts';
+      case 'derived-division':
+        return 'Derived Division Facts';
       case 'combinations':
         return 'Combinations & Sums';
       default:
@@ -489,45 +815,100 @@ export function StudentSelfAssessment({ studentId, onComplete }: StudentSelfAsse
           <p className="text-gray-600">Choose an assessment type to begin sorting math facts</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="p-6 border-2 border-blue-200 rounded-lg bg-blue-50">
-            <h4 className="font-semibold text-blue-800 mb-2">Foundational Addition Facts</h4>
-            <p className="text-blue-700 text-sm mb-4">
-              Sort addition facts: I Knew It, I Used a Strategy, or I Counted.
-            </p>
-            <Button onClick={startFoundationalAssessment} className="w-full">
-              Start Assessment
-            </Button>
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-lg font-semibold text-gray-700 mb-3">Addition & Subtraction Facts</h4>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
+                <h5 className="font-semibold text-blue-800 mb-1 text-sm">Foundational Addition</h5>
+                <p className="text-blue-700 text-xs mb-3">
+                  I Knew It, I Used a Strategy, I Counted
+                </p>
+                <Button onClick={startFoundationalAssessment} className="w-full" size="sm">
+                  Start
+                </Button>
+              </div>
+
+              <div className="p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                <h5 className="font-semibold text-red-800 mb-1 text-sm">Foundational Subtraction</h5>
+                <p className="text-red-700 text-xs mb-3">
+                  I Knew It, I Used a Strategy, I Counted
+                </p>
+                <Button onClick={startFoundationalSubtractionAssessment} className="w-full" size="sm">
+                  Start
+                </Button>
+              </div>
+
+              <div className="p-4 border-2 border-green-200 rounded-lg bg-green-50">
+                <h5 className="font-semibold text-green-800 mb-1 text-sm">Derived Addition</h5>
+                <p className="text-green-700 text-xs mb-3">
+                  Near Doubles, Make 10, Strategies
+                </p>
+                <Button onClick={startDerivedAdditionAssessment} className="w-full" size="sm">
+                  Start
+                </Button>
+              </div>
+
+              <div className="p-4 border-2 border-yellow-200 rounded-lg bg-yellow-50">
+                <h5 className="font-semibold text-yellow-800 mb-1 text-sm">Derived Subtraction</h5>
+                <p className="text-yellow-700 text-xs mb-3">
+                  Think Addition, Anchor to 10, Counting
+                </p>
+                <Button onClick={startDerivedSubtractionAssessment} className="w-full" size="sm">
+                  Start
+                </Button>
+              </div>
+            </div>
           </div>
 
-          <div className="p-6 border-2 border-red-200 rounded-lg bg-red-50">
-            <h4 className="font-semibold text-red-800 mb-2">Foundational Subtraction Facts</h4>
-            <p className="text-red-700 text-sm mb-4">
-              Sort subtraction facts: I Knew It, I Used a Strategy, or I Counted.
-            </p>
-            <Button onClick={startFoundationalSubtractionAssessment} className="w-full">
-              Start Assessment
-            </Button>
+          <div>
+            <h4 className="text-lg font-semibold text-gray-700 mb-3">Multiplication & Division Facts</h4>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="p-4 border-2 border-indigo-200 rounded-lg bg-indigo-50">
+                <h5 className="font-semibold text-indigo-800 mb-1 text-sm">Foundational Multiplication</h5>
+                <p className="text-indigo-700 text-xs mb-3">
+                  2s, 5s, 10s, Squares (Skip Count, Strategy, Knew It)
+                </p>
+                <Button onClick={startFoundationalMultiplicationAssessment} className="w-full" size="sm">
+                  Start
+                </Button>
+              </div>
+
+              <div className="p-4 border-2 border-pink-200 rounded-lg bg-pink-50">
+                <h5 className="font-semibold text-pink-800 mb-1 text-sm">Derived Multiplication</h5>
+                <p className="text-pink-700 text-xs mb-3">
+                  Doubling, Near Squares, Break Apart
+                </p>
+                <Button onClick={startDerivedMultiplicationAssessment} className="w-full" size="sm">
+                  Start
+                </Button>
+              </div>
+
+              <div className="p-4 border-2 border-orange-200 rounded-lg bg-orange-50">
+                <h5 className="font-semibold text-orange-800 mb-1 text-sm">Derived Division</h5>
+                <p className="text-orange-700 text-xs mb-3">
+                  Think Multiplication, Skip Count, Knew It
+                </p>
+                <Button onClick={startDerivedDivisionAssessment} className="w-full" size="sm">
+                  Start
+                </Button>
+              </div>
+            </div>
           </div>
 
-          <div className="p-6 border-2 border-green-200 rounded-lg bg-green-50">
-            <h4 className="font-semibold text-green-800 mb-2">Derived Addition Facts</h4>
-            <p className="text-green-700 text-sm mb-4">
-              Sort by strategy: I Knew It, Near Doubles, Make 10, or other strategies.
-            </p>
-            <Button onClick={startDerivedAdditionAssessment} className="w-full">
-              Start Assessment
-            </Button>
-          </div>
-
-          <div className="p-6 border-2 border-purple-200 rounded-lg bg-purple-50">
-            <h4 className="font-semibold text-purple-800 mb-2">Combinations & Sums</h4>
-            <p className="text-purple-700 text-sm mb-4">
-              Sort by sum: less than 10, equal to 10, or more than 10.
-            </p>
-            <Button onClick={startCombinationsAssessment} className="w-full">
-              Start Assessment
-            </Button>
+          <div>
+            <h4 className="text-lg font-semibold text-gray-700 mb-3">Special Categories</h4>
+            <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-3">
+              <div className="p-4 border-2 border-purple-200 rounded-lg bg-purple-50">
+                <h5 className="font-semibold text-purple-800 mb-1 text-sm">Combinations & Sums</h5>
+                <p className="text-purple-700 text-xs mb-3">
+                  Sort by sum: Less than 10, Equal to 10, More than 10
+                </p>
+                <Button onClick={startCombinationsAssessment} className="w-full" size="sm">
+                  Start
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
