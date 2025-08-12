@@ -10,13 +10,12 @@ import { Student, StudentProgress, FactCategory, Game } from "@shared/schema";
 
 export default function Dashboard() {
   // Default student for demo
-  const defaultStudent: Student = {
+  const defaultStudent = {
     id: "student-1",
     name: "Alex Rodriguez",
     grade: 6,
     section: "A",
-    initials: "AR",
-    createdAt: new Date()
+    initials: "AR"
   };
 
   const { data: progress = [] } = useQuery<StudentProgress[]>({
