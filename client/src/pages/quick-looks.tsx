@@ -4,6 +4,7 @@ import { Header } from "@/components/header";
 import { Navigation } from "@/components/navigation";
 import { QuickLooksDisplay } from "@/components/quick-looks-display";
 import { QuickLooksAnalytics } from "@/components/quick-looks-analytics";
+import { QuickLooksDemoGuide } from "@/components/quick-looks-demo-guide";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest } from "@/lib/queryClient";
@@ -144,11 +145,18 @@ export default function QuickLooks() {
         </section>
 
         {/* Analytics and Learning Objectives */}
-        <Tabs defaultValue="objectives" className="mb-8">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="guide" className="mb-8">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="guide">How to Use</TabsTrigger>
             <TabsTrigger value="objectives">Learning Framework</TabsTrigger>
             <TabsTrigger value="analytics">Progress & Analytics</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="guide">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <QuickLooksDemoGuide />
+            </div>
+          </TabsContent>
           
           <TabsContent value="objectives">
             <div className="bg-white rounded-xl shadow-sm p-6">
