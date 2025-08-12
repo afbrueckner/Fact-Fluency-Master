@@ -1,11 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Eye, Route, Gamepad2, ClipboardCheck, Star } from "lucide-react";
+import { Eye, Route, Gamepad2, ClipboardCheck, Star, Home } from "lucide-react";
 
 export function Navigation() {
   const [location] = useLocation();
 
   const navItems = [
+    { href: "/", label: "Dashboard", icon: Home },
     { href: "/quick-looks", label: "Quick Looks", icon: Eye },
     { href: "/learning-path", label: "Learning Path", icon: Route },
     { href: "/games", label: "Math Games", icon: Gamepad2 },
