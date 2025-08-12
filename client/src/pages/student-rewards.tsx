@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Star, Trophy, ShoppingCart, History, Sparkles } from "lucide-react";
+import { Star, Trophy, ShoppingCart, History, Sparkles, Home, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 import type { StudentPoints, RewardItem, StudentReward, StudentAvatar, PointTransaction } from "@shared/schema";
 
 const STUDENT_ID = "student-1";
@@ -241,7 +242,30 @@ export default function StudentRewards() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with navigation */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                <ArrowLeft className="h-5 w-5" />
+                <span className="font-medium">Back to Dashboard</span>
+              </Link>
+              <div className="h-6 w-px bg-gray-300" />
+              <h1 className="text-xl font-bold text-gray-900">My Avatar & Rewards</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                <span className="font-semibold text-lg">{points?.availablePoints || 0} points</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto p-6 max-w-6xl">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Avatar and Points */}
         <div className="lg:col-span-1">
@@ -448,6 +472,7 @@ export default function StudentRewards() {
           </Tabs>
         </div>
       </div>
+    </div>
     </div>
   );
 }
