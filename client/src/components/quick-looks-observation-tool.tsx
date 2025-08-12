@@ -160,6 +160,32 @@ export function QuickLooksObservationTool({ pattern, studentId, onComplete }: Qu
         };
         
         await updateProgressMutation.mutateAsync(progressData);
+
+        // Award points for completing observations - different points based on accuracy and phase
+        let pointsToAward = 5; // Base points
+        if (obs.accuracy === 'correct') pointsToAward += 5;
+        if (obs.phase === 'mastery') pointsToAward += 5;
+        if (obs.visualRecognition === 'immediate') pointsToAward += 3;
+
+        try {
+          await fetch(`/api/students/${studentId}/points/add`, {
+            method: "POST",
+            body: JSON.stringify({
+              points: pointsToAward,
+              reason: `Quick Looks observation: ${pattern.description}`,
+              category: "quick-looks",
+              metadata: {
+                pattern: pattern.description,
+                accuracy: obs.accuracy,
+                phase: obs.phase,
+                visualRecognition: obs.visualRecognition
+              }
+            }),
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (pointsError) {
+          console.log("Points system not available, but observation saved successfully");
+        }
       } catch (error) {
         console.error('Failed to save observation or update progress:', error);
       }
