@@ -423,6 +423,7 @@ export class MemStorage implements IStorage {
       ...insertAssessment,
       id,
       createdAt: new Date(),
+      notes: insertAssessment.notes || null,
     };
     this.selfAssessments.set(id, assessment);
     return assessment;
