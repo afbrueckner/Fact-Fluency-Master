@@ -3,12 +3,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { Navigation } from "@/components/navigation";
 import { QuickLooksDisplay } from "@/components/quick-looks-display";
+import { QuickLooksAnalytics } from "@/components/quick-looks-analytics";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest } from "@/lib/queryClient";
 import { Student } from "@shared/schema";
 
 export default function QuickLooks() {
   const [isSessionActive, setIsSessionActive] = useState(false);
+  const [teacherMode, setTeacherMode] = useState(false);
   const queryClient = useQueryClient();
   
   const defaultStudent: Student = {
@@ -73,17 +76,35 @@ export default function QuickLooks() {
                 </p>
               </div>
               {!isSessionActive && (
-                <Button 
-                  onClick={handleStartSession}
-                  className="bg-primary-500 text-white hover:bg-primary-600"
-                >
-                  <i className="fas fa-eye mr-2"></i>Start Session
-                </Button>
+                <div className="flex gap-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="teacher-mode"
+                      checked={teacherMode}
+                      onChange={(e) => setTeacherMode(e.target.checked)}
+                      className="rounded"
+                    />
+                    <label htmlFor="teacher-mode" className="text-sm text-gray-600">
+                      Teacher Mode (Record Observations)
+                    </label>
+                  </div>
+                  <Button 
+                    onClick={handleStartSession}
+                    className="bg-primary-500 text-white hover:bg-primary-600"
+                  >
+                    <i className="fas fa-eye mr-2"></i>Start Quick Look
+                  </Button>
+                </div>
               )}
             </div>
             
             {isSessionActive ? (
-              <QuickLooksDisplay onComplete={handleCompleteSession} />
+              <QuickLooksDisplay 
+                onComplete={handleCompleteSession} 
+                studentId={defaultStudent.id}
+                enableTeacherMode={teacherMode}
+              />
             ) : (
               <div className="text-center py-12">
                 <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -122,10 +143,16 @@ export default function QuickLooks() {
           </div>
         </section>
 
-        {/* Learning Objectives */}
-        <section className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Through Quick Looks</h3>
+        {/* Analytics and Learning Objectives */}
+        <Tabs defaultValue="objectives" className="mb-8">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="objectives">Learning Framework</TabsTrigger>
+            <TabsTrigger value="analytics">Progress & Analytics</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="objectives">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Through Quick Looks</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h4 className="font-medium text-gray-800 mb-3">What Quick Looks Develop:</h4>
@@ -159,8 +186,15 @@ export default function QuickLooks() {
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="analytics">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <QuickLooksAnalytics studentId={defaultStudent.id} />
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

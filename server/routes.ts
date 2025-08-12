@@ -76,6 +76,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quick Looks progress integration
+  app.post("/api/students/:studentId/quick-looks-progress", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const { factCategoryId, visualRecognition, phase, accuracy } = req.body;
+      
+      // Convert Quick Looks observation to progress update
+      const progressData = {
+        studentId,
+        factCategoryId,
+        phase,
+        // Map visual recognition and accuracy to progress metrics
+        accuracy: accuracy === 'correct' ? 90 : accuracy === 'partially-correct' ? 70 : 40,
+        efficiency: visualRecognition === 'immediate' ? 95 : visualRecognition === 'hesitant' ? 75 : 50,
+        flexibility: phase === 'mastery' ? 90 : phase === 'deriving' ? 70 : 40,
+        strategyUse: phase === 'mastery' ? 85 : phase === 'deriving' ? 65 : 35
+      };
+      
+      const progress = await storage.updateStudentProgress(progressData);
+      res.json(progress);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update progress from Quick Looks" });
+    }
+  });
+
   // Games routes
   app.get("/api/games", async (req, res) => {
     try {
