@@ -7,7 +7,8 @@ import {
   insertGameResultSchema,
   insertAssessmentObservationSchema,
   insertQuickLooksSessionSchema,
-  insertSelfAssessmentSchema
+  insertSelfAssessmentSchema,
+  insertStudentAvatarSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -225,6 +226,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(assessment);
     } catch (error) {
       res.status(400).json({ message: "Invalid self assessment data" });
+    }
+  });
+
+  // Avatar system routes
+  app.get("/api/students/:studentId/avatar", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const avatar = await storage.getStudentAvatar(studentId);
+      res.json(avatar);
+    } catch (error) {
+      console.error("Error fetching avatar:", error);
+      res.status(500).json({ error: "Failed to fetch avatar" });
+    }
+  });
+
+  app.post("/api/students/:studentId/avatar", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const avatarData = insertStudentAvatarSchema.parse({ 
+        ...req.body, 
+        studentId 
+      });
+      const avatar = await storage.createStudentAvatar(avatarData);
+      res.json(avatar);
+    } catch (error: any) {
+      console.error("Error creating avatar:", error);
+      if (error.name === "ZodError") {
+        res.status(400).json({ error: "Validation error", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create avatar" });
+      }
+    }
+  });
+
+  app.put("/api/students/:studentId/avatar", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const updates = req.body;
+      const avatar = await storage.updateStudentAvatar(studentId, updates);
+      res.json(avatar);
+    } catch (error: any) {
+      console.error("Error updating avatar:", error);
+      res.status(500).json({ error: "Failed to update avatar" });
+    }
+  });
+
+  // Reward system routes
+  app.get("/api/reward-items", async (req, res) => {
+    try {
+      const items = await storage.getRewardItems();
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching reward items:", error);
+      res.status(500).json({ error: "Failed to fetch reward items" });
+    }
+  });
+
+  app.get("/api/students/:studentId/rewards", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const rewards = await storage.getStudentRewards(studentId);
+      res.json(rewards);
+    } catch (error) {
+      console.error("Error fetching student rewards:", error);
+      res.status(500).json({ error: "Failed to fetch student rewards" });
+    }
+  });
+
+  app.post("/api/students/:studentId/rewards/:rewardItemId/unlock", async (req, res) => {
+    try {
+      const { studentId, rewardItemId } = req.params;
+      const reward = await storage.unlockReward(studentId, rewardItemId);
+      res.json(reward);
+    } catch (error: any) {
+      console.error("Error unlocking reward:", error);
+      res.status(500).json({ error: "Failed to unlock reward" });
+    }
+  });
+
+  app.post("/api/students/:studentId/rewards/:rewardItemId/equip", async (req, res) => {
+    try {
+      const { studentId, rewardItemId } = req.params;
+      const reward = await storage.equipReward(studentId, rewardItemId);
+      res.json(reward);
+    } catch (error: any) {
+      console.error("Error equipping reward:", error);
+      res.status(500).json({ error: "Failed to equip reward" });
+    }
+  });
+
+  // Points system routes
+  app.get("/api/students/:studentId/points", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const points = await storage.getStudentPoints(studentId);
+      res.json(points);
+    } catch (error) {
+      console.error("Error fetching points:", error);
+      res.status(500).json({ error: "Failed to fetch points" });
+    }
+  });
+
+  app.post("/api/students/:studentId/points/add", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const { points, reason, category, metadata } = req.body;
+      const result = await storage.addPoints(studentId, points, reason, category, metadata);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error adding points:", error);
+      res.status(500).json({ error: "Failed to add points" });
+    }
+  });
+
+  app.post("/api/students/:studentId/points/spend", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const { points, reason } = req.body;
+      const result = await storage.spendPoints(studentId, points, reason);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error spending points:", error);
+      res.status(500).json({ error: "Failed to spend points" });
+    }
+  });
+
+  app.get("/api/students/:studentId/transactions", async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const transactions = await storage.getPointTransactions(studentId);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      res.status(500).json({ error: "Failed to fetch transactions" });
     }
   });
 

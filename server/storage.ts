@@ -12,7 +12,17 @@ import {
   type QuickLooksSession,
   type InsertQuickLooksSession,
   type SelfAssessment,
-  type InsertSelfAssessment
+  type InsertSelfAssessment,
+  type StudentAvatar,
+  type InsertStudentAvatar,
+  type RewardItem,
+  type InsertRewardItem,
+  type StudentReward,
+  type InsertStudentReward,
+  type StudentPoints,
+  type InsertStudentPoints,
+  type PointTransaction,
+  type InsertPointTransaction,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -51,6 +61,21 @@ export interface IStorage {
   saveSelfAssessment(assessment: InsertSelfAssessment): Promise<SelfAssessment>;
   getSelfAssessments(studentId: string): Promise<SelfAssessment[]>;
   updateSelfAssessment(id: string, updates: Partial<InsertSelfAssessment>): Promise<SelfAssessment>;
+  
+  // Avatar system
+  getStudentAvatar(studentId: string): Promise<StudentAvatar | undefined>;
+  createStudentAvatar(avatar: InsertStudentAvatar): Promise<StudentAvatar>;
+  updateStudentAvatar(studentId: string, updates: Partial<StudentAvatar>): Promise<StudentAvatar>;
+  
+  getRewardItems(): Promise<RewardItem[]>;
+  getStudentRewards(studentId: string): Promise<StudentReward[]>;
+  unlockReward(studentId: string, rewardItemId: string): Promise<StudentReward>;
+  equipReward(studentId: string, rewardItemId: string): Promise<StudentReward>;
+  
+  getStudentPoints(studentId: string): Promise<StudentPoints>;
+  addPoints(studentId: string, points: number, reason: string, category: string, metadata?: any): Promise<StudentPoints>;
+  spendPoints(studentId: string, points: number, reason: string): Promise<StudentPoints>;
+  getPointTransactions(studentId: string): Promise<PointTransaction[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -62,6 +87,11 @@ export class MemStorage implements IStorage {
   private observations: Map<string, AssessmentObservation>;
   private quickLooksSessions: Map<string, QuickLooksSession>;
   private selfAssessments: Map<string, SelfAssessment>;
+  private avatars: Map<string, StudentAvatar>;
+  private rewardItems: Map<string, RewardItem>;
+  private studentRewards: Map<string, StudentReward>;
+  private studentPoints: Map<string, StudentPoints>;
+  private pointTransactions: Map<string, PointTransaction>;
 
   constructor() {
     this.students = new Map();
@@ -72,6 +102,11 @@ export class MemStorage implements IStorage {
     this.observations = new Map();
     this.quickLooksSessions = new Map();
     this.selfAssessments = new Map();
+    this.avatars = new Map();
+    this.rewardItems = new Map();
+    this.studentRewards = new Map();
+    this.studentPoints = new Map();
+    this.pointTransactions = new Map();
     
     this.initializeDefaultData();
   }
@@ -226,6 +261,105 @@ export class MemStorage implements IStorage {
     gamesData.forEach(game => {
       this.games.set(game.id, game);
     });
+
+    // Initialize reward items
+    const rewardItemsData: RewardItem[] = [
+      {
+        id: "accessory-hat-1",
+        name: "Math Wizard Hat",
+        category: "accessory",
+        type: "hat",
+        description: "A magical hat for math masters",
+        icon: "🎩",
+        unlockCondition: { points: 50, type: "points" },
+        rarity: "common",
+        createdAt: new Date(),
+      },
+      {
+        id: "accessory-glasses-1",
+        name: "Smart Glasses",
+        category: "accessory",
+        type: "glasses",
+        description: "Look smart while solving problems",
+        icon: "🤓",
+        unlockCondition: { points: 30, type: "points" },
+        rarity: "common",
+        createdAt: new Date(),
+      },
+      {
+        id: "outfit-superhero-1",
+        name: "Math Hero Cape",
+        category: "outfit",
+        type: "cape",
+        description: "Show off your math superpowers",
+        icon: "🦸",
+        unlockCondition: { points: 100, type: "points" },
+        rarity: "rare",
+        createdAt: new Date(),
+      },
+      {
+        id: "background-space-1",
+        name: "Space Station",
+        category: "background",
+        type: "space",
+        description: "Practice math among the stars",
+        icon: "🚀",
+        unlockCondition: { points: 75, type: "points" },
+        rarity: "rare",
+        createdAt: new Date(),
+      },
+      {
+        id: "expression-excited-1",
+        name: "Excited Expression",
+        category: "expression",
+        type: "excited",
+        description: "Show how excited you are about math",
+        icon: "😁",
+        unlockCondition: { points: 25, type: "points" },
+        rarity: "common",
+        createdAt: new Date(),
+      },
+    ];
+    rewardItemsData.forEach(item => {
+      this.rewardItems.set(item.id, item);
+    });
+
+    // Initialize default avatar and some starter rewards for the default student
+    const defaultAvatar: StudentAvatar = {
+      id: randomUUID(),
+      studentId: "student-1",
+      avatarType: "character",
+      baseColor: "#4F46E5",
+      accessories: [],
+      outfit: "casual",
+      expression: "happy",
+      background: "classroom",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.avatars.set(defaultAvatar.id, defaultAvatar);
+
+    // Give the default student some starting points
+    const defaultPoints: StudentPoints = {
+      id: randomUUID(),
+      studentId: "student-1",
+      totalPoints: 150,
+      spentPoints: 0,
+      availablePoints: 150,
+      updatedAt: new Date(),
+    };
+    this.studentPoints.set(defaultPoints.id, defaultPoints);
+
+    // Add a welcome transaction
+    const welcomeTransaction: PointTransaction = {
+      id: randomUUID(),
+      studentId: "student-1",
+      points: 150,
+      reason: "Welcome bonus!",
+      category: "welcome",
+      createdAt: new Date(),
+    };
+    this.pointTransactions.set(welcomeTransaction.id, welcomeTransaction);
 
     // Initialize sample progress data
     const progressData: StudentProgress[] = [
@@ -447,6 +581,164 @@ export class MemStorage implements IStorage {
     };
     this.selfAssessments.set(id, updated);
     return updated;
+  }
+
+  // Avatar system methods
+  async getStudentAvatar(studentId: string): Promise<StudentAvatar | undefined> {
+    return Array.from(this.avatars.values()).find(avatar => avatar.studentId === studentId);
+  }
+
+  async createStudentAvatar(insertAvatar: InsertStudentAvatar): Promise<StudentAvatar> {
+    const id = randomUUID();
+    const avatar: StudentAvatar = {
+      ...insertAvatar,
+      id,
+      accessories: insertAvatar.accessories || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.avatars.set(id, avatar);
+    return avatar;
+  }
+
+  async updateStudentAvatar(studentId: string, updates: Partial<StudentAvatar>): Promise<StudentAvatar> {
+    const existing = Array.from(this.avatars.values()).find(avatar => avatar.studentId === studentId);
+    if (!existing) {
+      throw new Error(`Avatar for student ${studentId} not found`);
+    }
+    
+    const updated: StudentAvatar = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.avatars.set(existing.id, updated);
+    return updated;
+  }
+
+  async getRewardItems(): Promise<RewardItem[]> {
+    return Array.from(this.rewardItems.values());
+  }
+
+  async getStudentRewards(studentId: string): Promise<StudentReward[]> {
+    return Array.from(this.studentRewards.values()).filter(reward => reward.studentId === studentId);
+  }
+
+  async unlockReward(studentId: string, rewardItemId: string): Promise<StudentReward> {
+    const id = randomUUID();
+    const reward: StudentReward = {
+      id,
+      studentId,
+      rewardItemId,
+      unlockedAt: new Date(),
+      isEquipped: false,
+    };
+    this.studentRewards.set(id, reward);
+    return reward;
+  }
+
+  async equipReward(studentId: string, rewardItemId: string): Promise<StudentReward> {
+    const rewardItem = this.rewardItems.get(rewardItemId);
+    if (!rewardItem) {
+      throw new Error("Reward item not found");
+    }
+
+    // Unequip other items in the same category first
+    Array.from(this.studentRewards.values()).forEach(reward => {
+      if (reward.studentId === studentId && reward.isEquipped) {
+        const item = this.rewardItems.get(reward.rewardItemId);
+        if (item && item.category === rewardItem.category) {
+          reward.isEquipped = false;
+          this.studentRewards.set(reward.id, reward);
+        }
+      }
+    });
+
+    // Equip the new item
+    const reward = Array.from(this.studentRewards.values()).find(r => 
+      r.studentId === studentId && r.rewardItemId === rewardItemId
+    );
+    if (!reward) {
+      throw new Error("Reward not unlocked");
+    }
+    reward.isEquipped = true;
+    this.studentRewards.set(reward.id, reward);
+    return reward;
+  }
+
+  async getStudentPoints(studentId: string): Promise<StudentPoints> {
+    let points = Array.from(this.studentPoints.values()).find(p => p.studentId === studentId);
+    if (!points) {
+      const id = randomUUID();
+      points = {
+        id,
+        studentId,
+        totalPoints: 0,
+        spentPoints: 0,
+        availablePoints: 0,
+        updatedAt: new Date(),
+      };
+      this.studentPoints.set(id, points);
+    }
+    return points;
+  }
+
+  async addPoints(studentId: string, points: number, reason: string, category: string, metadata?: any): Promise<StudentPoints> {
+    const studentPointsData = await this.getStudentPoints(studentId);
+    
+    // Update points
+    studentPointsData.totalPoints += points;
+    studentPointsData.availablePoints += points;
+    studentPointsData.updatedAt = new Date();
+    this.studentPoints.set(studentPointsData.id, studentPointsData);
+
+    // Record transaction
+    const transactionId = randomUUID();
+    const transaction: PointTransaction = {
+      id: transactionId,
+      studentId,
+      points,
+      reason,
+      category,
+      metadata,
+      createdAt: new Date(),
+    };
+    this.pointTransactions.set(transactionId, transaction);
+
+    return studentPointsData;
+  }
+
+  async spendPoints(studentId: string, points: number, reason: string): Promise<StudentPoints> {
+    const studentPointsData = await this.getStudentPoints(studentId);
+    
+    if (studentPointsData.availablePoints < points) {
+      throw new Error("Insufficient points");
+    }
+
+    studentPointsData.spentPoints += points;
+    studentPointsData.availablePoints -= points;
+    studentPointsData.updatedAt = new Date();
+    this.studentPoints.set(studentPointsData.id, studentPointsData);
+
+    // Record transaction
+    const transactionId = randomUUID();
+    const transaction: PointTransaction = {
+      id: transactionId,
+      studentId,
+      points: -points,
+      reason,
+      category: 'purchase',
+      createdAt: new Date(),
+    };
+    this.pointTransactions.set(transactionId, transaction);
+
+    return studentPointsData;
+  }
+
+  async getPointTransactions(studentId: string): Promise<PointTransaction[]> {
+    return Array.from(this.pointTransactions.values())
+      .filter(transaction => transaction.studentId === studentId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 }
 

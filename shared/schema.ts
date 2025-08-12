@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 import { pgTable, text, varchar, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -104,6 +104,59 @@ export const insertGameResultSchema = createInsertSchema(gameResults).omit({
   completedAt: true,
 });
 
+// Student Avatar and Rewards System
+export const studentAvatars = pgTable("student_avatars", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").notNull().references(() => students.id),
+  avatarType: varchar("avatar_type").notNull(), // 'animal', 'robot', 'character', 'custom'
+  baseColor: varchar("base_color").notNull().default('#4F46E5'),
+  accessories: jsonb("accessories").notNull().default([]), // array of accessory IDs
+  outfit: varchar("outfit").default('casual'),
+  expression: varchar("expression").notNull().default('happy'),
+  background: varchar("background").default('classroom'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const rewardItems = pgTable("reward_items", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+  category: varchar("category").notNull(), // 'accessory', 'outfit', 'background', 'expression'
+  type: varchar("type").notNull(), // specific type within category
+  description: varchar("description"),
+  icon: varchar("icon"), // SVG icon or emoji
+  unlockCondition: jsonb("unlock_condition").notNull(), // conditions to unlock
+  rarity: varchar("rarity").notNull().default('common'), // 'common', 'rare', 'epic', 'legendary'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const studentRewards = pgTable("student_rewards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").notNull().references(() => students.id),
+  rewardItemId: varchar("reward_item_id").notNull().references(() => rewardItems.id),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+  isEquipped: boolean("is_equipped").notNull().default(false),
+});
+
+export const studentPoints = pgTable("student_points", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").notNull().references(() => students.id),
+  totalPoints: integer("total_points").notNull().default(0),
+  spentPoints: integer("spent_points").notNull().default(0),
+  availablePoints: integer("available_points").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const pointTransactions = pgTable("point_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").notNull().references(() => students.id),
+  points: integer("points").notNull(), // positive for earning, negative for spending
+  reason: varchar("reason").notNull(), // what the points were earned/spent for
+  category: varchar("category").notNull(), // 'quick-looks', 'assessment', 'game', 'purchase'
+  metadata: jsonb("metadata"), // additional context
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertAssessmentObservationSchema = createInsertSchema(assessmentObservations).omit({
   id: true,
   createdAt: true,
@@ -133,3 +186,76 @@ export type QuickLooksSession = typeof quickLooksSessions.$inferSelect;
 export type InsertQuickLooksSession = z.infer<typeof insertQuickLooksSessionSchema>;
 export type SelfAssessment = typeof selfAssessments.$inferSelect;
 export type InsertSelfAssessment = z.infer<typeof insertSelfAssessmentSchema>;
+
+// Avatar relations
+export const avatarRelations = relations(studentAvatars, ({ one }) => ({
+  student: one(students, {
+    fields: [studentAvatars.studentId],
+    references: [students.id],
+  }),
+}));
+
+// Reward relations  
+export const rewardRelations = relations(studentRewards, ({ one }) => ({
+  student: one(students, {
+    fields: [studentRewards.studentId],
+    references: [students.id],
+  }),
+  rewardItem: one(rewardItems, {
+    fields: [studentRewards.rewardItemId],
+    references: [rewardItems.id],
+  }),
+}));
+
+// Points relations
+export const pointsRelations = relations(studentPoints, ({ one }) => ({
+  student: one(students, {
+    fields: [studentPoints.studentId],
+    references: [students.id],
+  }),
+}));
+
+export const transactionRelations = relations(pointTransactions, ({ one }) => ({
+  student: one(students, {
+    fields: [pointTransactions.studentId],
+    references: [students.id],
+  }),
+}));
+
+// Avatar system types
+export type StudentAvatar = typeof studentAvatars.$inferSelect;
+export type InsertStudentAvatar = typeof studentAvatars.$inferInsert;
+export type RewardItem = typeof rewardItems.$inferSelect;
+export type InsertRewardItem = typeof rewardItems.$inferInsert;
+export type StudentReward = typeof studentRewards.$inferSelect;
+export type InsertStudentReward = typeof studentRewards.$inferInsert;
+export type StudentPoints = typeof studentPoints.$inferSelect;
+export type InsertStudentPoints = typeof studentPoints.$inferInsert;
+export type PointTransaction = typeof pointTransactions.$inferSelect;
+export type InsertPointTransaction = typeof pointTransactions.$inferInsert;
+
+// Avatar system Zod schemas
+export const insertStudentAvatarSchema = createInsertSchema(studentAvatars).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRewardItemSchema = createInsertSchema(rewardItems).omit({
+  createdAt: true,
+});
+
+export const insertStudentRewardSchema = createInsertSchema(studentRewards).omit({
+  id: true,
+  unlockedAt: true,
+});
+
+export const insertStudentPointsSchema = createInsertSchema(studentPoints).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertPointTransactionSchema = createInsertSchema(pointTransactions).omit({
+  id: true,
+  createdAt: true,
+});
