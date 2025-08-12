@@ -6,6 +6,7 @@ export function Navigation() {
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: "fas fa-home" },
+    { path: "/learning-path", label: "Learning Path", icon: "fas fa-route" },
     { path: "/quick-looks", label: "Quick Looks", icon: "fas fa-eye" },
     { path: "/games", label: "Games", icon: "fas fa-gamepad" },
     { path: "/assessment", label: "Assessment", icon: "fas fa-chart-line" },
