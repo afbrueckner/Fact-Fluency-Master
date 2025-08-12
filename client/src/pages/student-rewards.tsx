@@ -128,39 +128,109 @@ export default function StudentRewards() {
     }
   };
 
-  const AvatarPreview = () => (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-yellow-500" />
-          Your Math Avatar
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center">
-        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center mb-4 relative overflow-hidden">
-          {avatar?.expression === "excited" && (
-            <div className="text-6xl">😁</div>
-          )}
-          {avatar?.expression === "happy" && (
-            <div className="text-6xl">😊</div>
-          )}
-          {!avatar?.expression && (
-            <div className="text-6xl">😊</div>
-          )}
-          {Array.isArray(avatar?.accessories) && avatar.accessories.includes("accessory-hat-1") && (
-            <div className="absolute -top-2 text-4xl">🎩</div>
-          )}
-          {Array.isArray(avatar?.accessories) && avatar.accessories.includes("accessory-glasses-1") && (
-            <div className="absolute text-2xl">🤓</div>
-          )}
-        </div>
-        <div className="text-center">
-          <h3 className="font-semibold">Alex's Avatar</h3>
-          <p className="text-sm text-muted-foreground">Type: {avatar?.avatarType || "Character"}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const getEquippedBackground = () => {
+    const equippedBackgroundReward = studentRewards.find(reward => 
+      reward.isEquipped && rewardItems.find(item => 
+        item.id === reward.rewardItemId && item.category === "background"
+      )
+    );
+    
+    if (equippedBackgroundReward) {
+      const backgroundItem = rewardItems.find(item => item.id === equippedBackgroundReward.rewardItemId);
+      if (backgroundItem?.id === "background-space-1") {
+        return "bg-gradient-to-br from-purple-900 via-blue-900 to-black";
+      }
+      if (backgroundItem?.id === "background-ocean-1") {
+        return "bg-gradient-to-br from-blue-400 via-cyan-500 to-blue-600";
+      }
+      if (backgroundItem?.id === "background-forest-1") {
+        return "bg-gradient-to-br from-green-600 via-green-500 to-green-700";
+      }
+    }
+    
+    return "bg-gradient-to-br from-blue-400 to-purple-600"; // default
+  };
+
+  const getEquippedAccessories = () => {
+    return studentRewards
+      .filter(reward => reward.isEquipped)
+      .map(reward => rewardItems.find(item => item.id === reward.rewardItemId))
+      .filter(item => item && item.category === "accessory");
+  };
+
+  const getEquippedExpression = () => {
+    const equippedExpressionReward = studentRewards.find(reward => 
+      reward.isEquipped && rewardItems.find(item => 
+        item.id === reward.rewardItemId && item.category === "expression"
+      )
+    );
+    
+    if (equippedExpressionReward) {
+      const expressionItem = rewardItems.find(item => item.id === equippedExpressionReward.rewardItemId);
+      if (expressionItem?.id === "expression-excited-1") return "😁";
+      if (expressionItem?.id === "expression-happy-1") return "😊";
+      if (expressionItem?.id === "expression-cool-1") return "😎";
+    }
+    
+    return "😊"; // default
+  };
+
+  const AvatarPreview = () => {
+    const backgroundClass = getEquippedBackground();
+    const equippedAccessories = getEquippedAccessories();
+    const expression = getEquippedExpression();
+
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-yellow-500" />
+            Your Math Avatar
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center">
+          <div className={`w-32 h-32 rounded-full ${backgroundClass} flex items-center justify-center mb-4 relative overflow-hidden border-4 border-white shadow-lg`}>
+            {/* Stars for space background */}
+            {backgroundClass.includes("purple-900") && (
+              <>
+                <div className="absolute top-2 left-6 text-white text-xs">⭐</div>
+                <div className="absolute top-8 right-4 text-white text-xs">✨</div>
+                <div className="absolute bottom-6 left-4 text-white text-xs">⭐</div>
+                <div className="absolute bottom-4 right-8 text-white text-xs">✨</div>
+              </>
+            )}
+            
+            {/* Main expression */}
+            <div className="text-6xl z-10">{expression}</div>
+            
+            {/* Equipped accessories */}
+            {equippedAccessories.map((accessory) => (
+              <div key={accessory?.id} className="absolute">
+                {accessory?.id === "accessory-hat-1" && (
+                  <div className="absolute -top-2 text-4xl">🎩</div>
+                )}
+                {accessory?.id === "accessory-glasses-1" && (
+                  <div className="absolute text-2xl">🤓</div>
+                )}
+                {accessory?.id === "accessory-bow-1" && (
+                  <div className="absolute -top-1 text-3xl">🎀</div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="text-center">
+            <h3 className="font-semibold">Alex's Avatar</h3>
+            <p className="text-sm text-muted-foreground">
+              {equippedAccessories.length > 0 
+                ? `Wearing ${equippedAccessories.length} item${equippedAccessories.length > 1 ? 's' : ''}` 
+                : "Ready for math adventures!"
+              }
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (pointsLoading || avatarLoading || itemsLoading || rewardsLoading) {
     return (
