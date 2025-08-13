@@ -13,6 +13,15 @@ import type { StudentPoints, RewardItem, StudentReward, StudentAvatar, PointTran
 
 const STUDENT_ID = "student-1";
 
+// Helper function to get cost from unlockCondition
+function getItemCost(item: RewardItem): number {
+  if (item.unlockCondition && typeof item.unlockCondition === 'object' && 'type' in item.unlockCondition) {
+    const condition = item.unlockCondition as { type: string; value: number };
+    return condition.type === 'points' ? condition.value : 0;
+  }
+  return 0;
+}
+
 export default function StudentRewards() {
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -84,13 +93,14 @@ export default function StudentRewards() {
   });
 
   const handleUnlockReward = async (item: RewardItem) => {
-    if (!points || points.availablePoints < (item.unlockCondition as any).points) {
+    const cost = getItemCost(item);
+    if (!points || points.availablePoints < cost) {
       return;
     }
 
     try {
       await spendPointsMutation.mutateAsync({
-        points: (item.unlockCondition as any).points,
+        amount: cost,
         reason: `Unlocked ${item.name}`,
       });
       await unlockRewardMutation.mutateAsync(item.id);
@@ -112,7 +122,8 @@ export default function StudentRewards() {
   };
 
   const canAffordReward = (item: RewardItem) => {
-    return points && points.availablePoints >= (item.unlockCondition as any).points;
+    const cost = getItemCost(item);
+    return points && points.availablePoints >= cost;
   };
 
   const filteredRewardItems = selectedCategory === "all" 
@@ -404,7 +415,7 @@ export default function StudentRewards() {
                           <div className="flex items-center gap-2">
                             <Star className="h-4 w-4 text-yellow-500" />
                             <span className="font-semibold">
-                              {(item.unlockCondition as any).points} points
+                              {getItemCost(item)} points
                             </span>
                           </div>
                           <div>
