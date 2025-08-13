@@ -15,7 +15,10 @@ import {
   unlockReward,
   equipReward,
   updateProgress,
-  addObservation
+  addObservation,
+  getFromStorage,
+  setInStorage,
+  addTransaction
 } from './localStorage';
 
 // Helper to extract cost from unlockCondition
@@ -129,5 +132,39 @@ export const mockApi = {
   async getGames() {
     await delay();
     return getGames();
+  },
+
+  // Game Results endpoints
+  async createGameResult(data: any) {
+    await delay();
+    // Add to localStorage game results
+    const results = getFromStorage('gameResults', []);
+    const newResult = {
+      id: `result-${Date.now()}`,
+      studentId: data.studentId,
+      gameId: data.gameId,
+      score: data.score,
+      accuracy: data.accuracy,
+      timeSpent: data.timeSpent,
+      strategiesUsed: data.strategiesUsed || [],
+      completedAt: new Date()
+    };
+    results.unshift(newResult);
+    setInStorage('gameResults', results);
+    
+    // Award points for game completion
+    const pointsEarned = Math.floor(data.score / 10) + Math.floor(data.accuracy / 20); // Points for score and accuracy
+    if (pointsEarned > 0) {
+      addPoints(pointsEarned, `Completed ${data.gameId}`);
+      addTransaction(pointsEarned, `Game: ${data.gameId} (Score: ${data.score})`);
+    }
+    
+    return newResult;
+  },
+
+  async getGameResults(studentId: string) {
+    await delay();
+    const results = getFromStorage('gameResults', []);
+    return results.filter((result: any) => result.studentId === studentId);
   }
 };

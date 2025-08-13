@@ -1,185 +1,214 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Timer, Target, Trophy } from "lucide-react";
 
 interface RacingBearsProps {
   onComplete: (score: number, accuracy: number, strategies: string[]) => void;
   onExit: () => void;
 }
 
-export function RacingBears({ onComplete, onExit }: RacingBearsProps) {
-  const [currentProblem, setCurrentProblem] = useState(0);
-  const [score, setScore] = useState(0);
-  const [userAnswer, setUserAnswer] = useState("");
-  const [feedback, setFeedback] = useState<{ message: string; type: "correct" | "incorrect" | "" }>({ message: "", type: "" });
-  const [strategiesUsed, setStrategiesUsed] = useState<string[]>([]);
-  const [gameComplete, setGameComplete] = useState(false);
+interface GameState {
+  currentProblem: string;
+  answer: number;
+  userAnswer: string;
+  score: number;
+  questionsAnswered: number;
+  correctAnswers: number;
+  timeElapsed: number;
+  gameComplete: boolean;
+}
 
-  // Racing Bears focuses on +0, +1, +2 facts
+export function RacingBears({ onComplete, onExit }: RacingBearsProps) {
+  const [gameState, setGameState] = useState<GameState>({
+    currentProblem: '',
+    answer: 0,
+    userAnswer: '',
+    score: 0,
+    questionsAnswered: 0,
+    correctAnswers: 0,
+    timeElapsed: 0,
+    gameComplete: false
+  });
+
+  const [bearPositions, setBearPositions] = useState([0, 0, 0, 0]); // 4 bears racing
+  const [selectedBear, setSelectedBear] = useState(0);
+
   const problems = [
-    { problem: "5 + 0", answer: 5, strategy: "adding zero" },
-    { problem: "7 + 1", answer: 8, strategy: "adding one" },
-    { problem: "3 + 2", answer: 5, strategy: "adding two" },
-    { problem: "9 + 0", answer: 9, strategy: "adding zero" },
-    { problem: "4 + 1", answer: 5, strategy: "adding one" },
-    { problem: "6 + 2", answer: 8, strategy: "adding two" },
-    { problem: "8 + 0", answer: 8, strategy: "adding zero" },
-    { problem: "2 + 1", answer: 3, strategy: "adding one" },
-    { problem: "7 + 2", answer: 9, strategy: "adding two" },
-    { problem: "1 + 1", answer: 2, strategy: "adding one" },
+    '1+1', '2+1', '3+1', '4+1', '5+1', '6+1', '7+1', '8+1', '9+1',
+    '1+2', '2+2', '3+2', '4+2', '5+2', '6+2', '7+2', '8+2'
   ];
 
-  const currentQ = problems[currentProblem] || problems[0];
-  const correctAnswers = strategiesUsed.filter(s => s !== "incorrect").length;
-  const accuracy = Math.round((correctAnswers / Math.max(currentProblem, 1)) * 100);
+  const generateNewProblem = () => {
+    const problem = problems[Math.floor(Math.random() * problems.length)];
+    const answer = eval(problem);
+    setGameState(prev => ({ ...prev, currentProblem: problem, answer, userAnswer: '' }));
+  };
 
   useEffect(() => {
-    if (currentProblem >= problems.length) {
-      setGameComplete(true);
-    }
-  }, [currentProblem]);
+    generateNewProblem();
+    const timer = setInterval(() => {
+      setGameState(prev => ({ ...prev, timeElapsed: prev.timeElapsed + 1 }));
+    }, 1000);
 
-  const handleSubmitAnswer = () => {
-    if (!currentQ || currentProblem >= problems.length) return;
-    
-    const answer = parseInt(userAnswer);
-    const isCorrect = answer === currentQ.answer;
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleAnswer = () => {
+    const isCorrect = parseInt(gameState.userAnswer) === gameState.answer;
+    const newCorrectAnswers = gameState.correctAnswers + (isCorrect ? 1 : 0);
+    const newQuestionsAnswered = gameState.questionsAnswered + 1;
     
     if (isCorrect) {
-      setScore(score + 10);
-      setFeedback({ message: "Great job! The bears are racing ahead! 🐻", type: "correct" });
-      setStrategiesUsed([...strategiesUsed, currentQ.strategy]);
-    } else {
-      setFeedback({ message: `Not quite. ${currentQ.problem} = ${currentQ.answer}. Try again!`, type: "incorrect" });
-      setStrategiesUsed([...strategiesUsed, "incorrect"]);
+      // Move the selected bear forward
+      setBearPositions(prev => {
+        const newPositions = [...prev];
+        newPositions[selectedBear] += 10;
+        return newPositions;
+      });
+      setGameState(prev => ({ ...prev, score: prev.score + 10 }));
     }
 
-    setTimeout(() => {
-      setCurrentProblem(currentProblem + 1);
-      setUserAnswer("");
-      setFeedback({ message: "", type: "" });
-    }, 2000);
+    setGameState(prev => ({
+      ...prev,
+      questionsAnswered: newQuestionsAnswered,
+      correctAnswers: newCorrectAnswers
+    }));
+
+    // Check if any bear reached the finish line (100)
+    if (bearPositions[selectedBear] >= 100 || newQuestionsAnswered >= 15) {
+      const accuracy = Math.round((newCorrectAnswers / newQuestionsAnswered) * 100);
+      setGameState(prev => ({ ...prev, gameComplete: true }));
+      onComplete(gameState.score + (isCorrect ? 10 : 0), accuracy, ['counting', 'memorization']);
+      return;
+    }
+
+    generateNewProblem();
   };
 
-  const handleComplete = () => {
-    const uniqueStrategies = Array.from(new Set(strategiesUsed.filter(s => s !== "incorrect")));
-    onComplete(score, accuracy, uniqueStrategies);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAnswer();
+    }
   };
 
-  if (gameComplete) {
-    return (
-      <div className="bg-white rounded-xl shadow-lg p-8 text-center max-w-2xl mx-auto">
-        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="text-white text-3xl">🏁</span>
-        </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Race Complete!</h2>
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <p className="text-2xl font-bold text-blue-600">{score}</p>
-            <p className="text-sm text-blue-700">Points Earned</p>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <p className="text-2xl font-bold text-green-600">{accuracy}%</p>
-            <p className="text-sm text-green-700">Accuracy</p>
-          </div>
-          <div className="bg-purple-50 rounded-lg p-4">
-            <p className="text-2xl font-bold text-purple-600">{correctAnswers}</p>
-            <p className="text-sm text-purple-700">Correct Answers</p>
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">Strategies Practiced:</h3>
-          <div className="flex flex-wrap justify-center gap-2">
-            {Array.from(new Set(strategiesUsed.filter(s => s !== "incorrect"))).map((strategy, index) => (
-              <Badge key={index} variant="secondary" className="bg-primary-100 text-primary-800">
-                {strategy.charAt(0).toUpperCase() + strategy.slice(1)}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex space-x-4 justify-center">
-          <Button onClick={handleComplete} className="bg-primary-500 hover:bg-primary-600">
-            Save Results
-          </Button>
-          <Button variant="outline" onClick={onExit}>
-            Back to Games
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <span className="text-3xl">🐻</span>
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">Racing Bears</h2>
-            <p className="text-sm text-gray-600">Practice +0, +1, +2 facts</p>
-          </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={onExit}>
-          Exit Game
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <Button variant="outline" onClick={onExit} size="sm">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Games
         </Button>
-      </div>
-
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600">Progress</span>
-          <span className="text-sm text-gray-600">{currentProblem + 1} of {problems.length}</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-primary-500 h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${((currentProblem + 1) / problems.length) * 100}%` }}
-          ></div>
-        </div>
-      </div>
-
-      <div className="text-center mb-8">
-        <div className="bg-gray-50 rounded-lg p-8 mb-6">
-          <p className="text-3xl font-bold text-gray-800 mb-4">{currentQ?.problem || "Loading..."} = ?</p>
-          <input
-            type="number"
-            value={userAnswer}
-            onChange={(e) => setUserAnswer(e.target.value)}
-            className="text-2xl text-center border-2 border-gray-300 rounded-lg p-3 w-32 focus:border-primary-500 focus:outline-none"
-            placeholder="?"
-            autoFocus
-            onKeyPress={(e) => e.key === 'Enter' && userAnswer && handleSubmitAnswer()}
-          />
-        </div>
-
-        {feedback.message && (
-          <div className={`p-4 rounded-lg mb-4 ${
-            feedback.type === "correct" ? "bg-green-50 border border-green-200 text-green-800" :
-            "bg-red-50 border border-red-200 text-red-800"
-          }`}>
-            {feedback.message}
-          </div>
-        )}
-
-        <Button 
-          onClick={handleSubmitAnswer}
-          disabled={!userAnswer || feedback.message !== ""}
-          className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-3 text-lg"
-        >
-          Submit Answer
-        </Button>
-      </div>
-
-      <div className="flex justify-between items-center text-sm text-gray-600">
+        <h1 className="text-2xl font-bold text-center">🐻 Racing Bears</h1>
         <div className="flex items-center space-x-4">
-          <span>Score: {score}</span>
-          <span>Accuracy: {accuracy}%</span>
-        </div>
-        <div className="text-xs text-gray-500">
-          Foundational Facts Practice
+          <Badge variant="outline">
+            <Timer className="h-4 w-4 mr-1" />
+            {formatTime(gameState.timeElapsed)}
+          </Badge>
+          <Badge variant="outline">
+            <Target className="h-4 w-4 mr-1" />
+            {gameState.questionsAnswered}/15
+          </Badge>
+          <Badge variant="outline">
+            <Trophy className="h-4 w-4 mr-1" />
+            Score: {gameState.score}
+          </Badge>
         </div>
       </div>
+
+      {/* Race Track */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Race Track</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {bearPositions.map((position, index) => (
+              <div key={index} className="relative">
+                <div className="flex items-center">
+                  <Button
+                    variant={selectedBear === index ? "default" : "outline"}
+                    onClick={() => setSelectedBear(index)}
+                    className="mr-4 w-20"
+                    size="sm"
+                  >
+                    Bear {index + 1}
+                  </Button>
+                  <div className="flex-1 bg-gray-200 rounded-full h-8 relative">
+                    {/* Track */}
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-dashed border-gray-400 border-t-2"></div>
+                    </div>
+                    {/* Finish Line */}
+                    <div className="absolute right-0 top-0 h-full w-2 bg-checkered bg-black"></div>
+                    {/* Bear */}
+                    <div 
+                      className="absolute top-1 h-6 w-6 flex items-center justify-center text-lg transition-all duration-500"
+                      style={{ left: `${Math.min(position, 92)}%` }}
+                    >
+                      🐻
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Problem */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Solve to Move Your Bear!</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center space-y-4">
+            <div className="text-6xl font-bold text-blue-600">
+              {gameState.currentProblem} = ?
+            </div>
+            <div className="flex items-center justify-center space-x-4">
+              <input
+                type="number"
+                value={gameState.userAnswer}
+                onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+                onKeyPress={handleKeyPress}
+                className="w-32 h-12 text-2xl text-center border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                placeholder="?"
+                autoFocus
+              />
+              <Button onClick={handleAnswer} size="lg">
+                Submit
+              </Button>
+            </div>
+            <p className="text-gray-600">
+              Bear {selectedBear + 1} will move forward if you're correct!
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Instructions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>How to Play</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ol className="list-decimal list-inside space-y-2 text-sm">
+            <li>Choose which bear you want to race with by clicking on them</li>
+            <li>Solve the addition problem to move your bear forward</li>
+            <li>The first bear to reach the finish line wins!</li>
+            <li>Answer 15 problems or get your bear to the finish line to complete the game</li>
+          </ol>
+        </CardContent>
+      </Card>
     </div>
   );
 }
