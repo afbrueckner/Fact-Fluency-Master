@@ -23,7 +23,7 @@ const STORAGE_KEYS = {
 } as const;
 
 // Helper functions
-function getFromStorage<T>(key: string, defaultValue: T): T {
+export function getFromStorage<T>(key: string, defaultValue: T): T {
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
@@ -32,7 +32,7 @@ function getFromStorage<T>(key: string, defaultValue: T): T {
   }
 }
 
-function setInStorage<T>(key: string, value: T): void {
+export function setInStorage<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
@@ -390,32 +390,63 @@ export function getGames(): Game[] {
     {
       id: "racing-bears",
       name: "Racing Bears",
-      description: "Help the bears race by solving addition facts quickly!",
+      description: "Help the bears race by solving addition facts quickly! Students take turns solving facts to move their bear forward.",
       operation: "addition",
       category: "foundational",
-      targetFacts: ["1+1", "2+1", "3+1", "1+2", "2+2", "3+2"],
+      targetFacts: ["1+1", "2+1", "3+1", "1+2", "2+2", "3+2", "4+1", "5+1", "6+1", "7+1", "8+1", "9+1"],
       emoji: "🐻",
       difficulty: "beginner"
     },
     {
-      id: "multiplication-bingo",
-      name: "Multiplication Bingo",
-      description: "Classic bingo with multiplication facts!",
-      operation: "multiplication",
+      id: "doubles-bingo",
+      name: "Doubles Bingo",
+      description: "Classic bingo game focused on doubles facts. Mark spaces as you solve doubles problems!",
+      operation: "addition",
       category: "foundational",
-      targetFacts: ["2×1", "2×2", "2×3", "5×1", "5×2", "5×3"],
+      targetFacts: ["1+1", "2+2", "3+3", "4+4", "5+5", "6+6", "7+7", "8+8", "9+9"],
       emoji: "🎯",
+      difficulty: "beginner"
+    },
+    {
+      id: "sum-war",
+      name: "Sum War",
+      description: "Card game where players compare sums. Higher sum wins the round!",
+      operation: "addition",
+      category: "derived",
+      targetFacts: ["3+4", "5+6", "7+8", "4+5", "6+7", "8+9", "2+9", "3+8"],
+      emoji: "⚔️",
       difficulty: "intermediate"
     },
     {
-      id: "fact-family-houses",
-      name: "Fact Family Houses",
-      description: "Build fact family houses with related facts!",
+      id: "trios",
+      name: "Trios",
+      description: "Find three numbers that make the target sum. Great for developing addition fluency!",
       operation: "addition",
       category: "derived",
-      targetFacts: ["1+1", "2+1", "3+1", "4+1", "5+1"],
-      emoji: "🏠",
-      difficulty: "beginner"
+      targetFacts: ["combinations to 10", "combinations to 15", "combinations to 20"],
+      emoji: "🔢",
+      difficulty: "intermediate"
+    },
+    {
+      id: "salute",
+      name: "Salute",
+      description: "Partner game where one player guesses the missing addend. Builds part-whole understanding!",
+      operation: "addition",
+      category: "derived",
+      targetFacts: ["missing addends", "part-whole relationships"],
+      emoji: "👋",
+      difficulty: "intermediate"
+    },
+    {
+      id: "three-dice-take",
+      name: "Three Dice Take",
+      description: "Roll three dice and use addition and subtraction to reach target numbers!",
+      operation: "mixed",
+      category: "advanced",
+      targetFacts: ["mixed addition", "mixed subtraction", "strategic thinking"],
+      emoji: "🎲",
+      difficulty: "advanced"
     }
   ];
 }
+

@@ -40,11 +40,15 @@ export default function Games() {
       timeSpent: number;
       strategiesUsed: string[];
     }) => {
-      return apiRequest("POST", "/api/students/student-1/game-results", result);
+      return apiRequest("/api/students/student-1/game-results", {
+        method: "POST",
+        body: JSON.stringify({ ...result, studentId: "student-1" })
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/students/student-1/game-results"] });
       queryClient.invalidateQueries({ queryKey: ["/api/students/student-1/progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/students/student-1/points"] });
     }
   });
 
