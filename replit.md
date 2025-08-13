@@ -17,30 +17,33 @@ Preferred communication style: Simple, everyday language.
 - **Routing**: Wouter for lightweight client-side routing
 - **Component Structure**: Modular component architecture with reusable UI components organized under `/components/ui/`
 
-### Backend Architecture
-- **Runtime**: Node.js with Express.js for REST API endpoints
-- **Language**: TypeScript for type safety across the full stack
-- **API Design**: RESTful endpoints for student management, progress tracking, games, and assessments
+### Backend Architecture (Updated August 2025)
+- **Development**: Node.js with Express.js for development environment only
+- **Production**: Static hosting - no backend required for production deployment
+- **API Simulation**: Mock API layer using localStorage for all data operations
 - **Development Setup**: TSX for development server with hot reloading
+- **Build Process**: `build-static.js` creates deployable static files for free hosting platforms
 
-### Data Storage Solutions
-- **Database**: PostgreSQL with Neon Database as the serverless provider
-- **ORM**: Drizzle ORM for type-safe database queries and schema management
-- **Schema Design**: Comprehensive schema covering students, fact categories, progress tracking, games, and assessment observations
-- **Session Storage**: Connect-pg-simple for PostgreSQL-backed session storage
+### Data Storage Solutions (Updated August 2025)
+- **Client-Side Storage**: localStorage for browser-based data persistence without hosting costs
+- **Mock API Layer**: `mockApi.ts` simulates server endpoints using localStorage for data operations
+- **Static Hosting Compatible**: No database required - works on GitHub Pages, Netlify, Vercel
+- **Schema Design**: Maintained comprehensive TypeScript schema for type safety across localStorage operations
+- **Data Persistence**: All progress tracking, avatar customization, and reward data stored locally in user's browser
 
-### Authentication and Authorization
-- **Session Management**: Express sessions with PostgreSQL storage
-- **Student Context**: Application operates with a default student context for demonstration purposes
-- **Security**: CORS handling and basic request validation
+### Authentication and Authorization (Updated August 2025)
+- **No Authentication Required**: Simplified for educational demonstration purposes
+- **Student Context**: Application operates with a default student context stored in localStorage
+- **Data Privacy**: All data remains local to user's browser with no server transmission
 
-### External Dependencies
-- **Database Service**: Neon Database (@neondatabase/serverless) for PostgreSQL hosting
+### External Dependencies (Updated August 2025)
+- **No External Services**: Eliminated database dependency for zero hosting costs
 - **UI Components**: Radix UI primitives for accessible component foundations
 - **Styling**: Tailwind CSS with custom design tokens for the Bay-Williams framework
 - **Development Tools**: Replit-specific plugins for development environment integration
 - **Form Handling**: React Hook Form with Zod validation for type-safe form management
 - **Date Utilities**: date-fns for date manipulation and formatting
+- **Static Hosting Ready**: Compatible with GitHub Pages, Netlify, Vercel for free deployment
 
 ### Key Design Patterns
 - **Shared Schema**: Common TypeScript types and Zod schemas shared between client and server
