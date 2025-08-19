@@ -211,104 +211,125 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
         </div>
       </div>
 
-      {/* New Observation Form */}
+
+
+      {/* Observation Form Modal */}
       {showNewObservation && (
-        <div className="bg-white rounded-lg p-6 border-2 border-gray-200">
-          <h4 className="font-semibold text-gray-800 mb-4">Add New Observation</h4>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Observation Type
-              </label>
-              <select
-                className="w-full p-2 border rounded-lg"
-                value={newObservation.observationType}
-                onChange={(e) => setNewObservation(prev => ({
-                  ...prev,
-                  observationType: e.target.value
-                }))}
-              >
-                <option value="">Select type...</option>
-                <option value="strategy">Strategy Use</option>
-                <option value="thinking">Mathematical Thinking</option>
-                <option value="communication">Communication</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fact Area
-              </label>
-              <Select 
-                value={newObservation.factArea} 
-                onValueChange={(value) => setNewObservation(prev => ({
-                  ...prev,
-                  factArea: value
-                }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select fact area..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {FACT_AREAS.map((area) => (
-                    <SelectItem key={area} value={area}>
-                      {area}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Learning Phase
-              </label>
-              <Select 
-                value={newObservation.phase} 
-                onValueChange={(value) => setNewObservation(prev => ({
-                  ...prev,
-                  phase: value
-                }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select learning phase..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEARNING_PHASES.map((phase) => (
-                    <SelectItem key={phase} value={phase.toLowerCase().replace(' phase', '')}>
-                      {phase}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Observation
-              </label>
-              <textarea
-                className="w-full p-2 border rounded-lg"
-                rows={3}
-                placeholder="Describe what you observed about the student's thinking or strategy use..."
-                value={newObservation.content}
-                onChange={(e) => setNewObservation(prev => ({
-                  ...prev,
-                  content: e.target.value
-                }))}
-              />
-            </div>
-            
-            <div className="flex space-x-3">
-              <Button onClick={handleSubmitObservation} className="bg-primary-500 hover:bg-primary-600">
-                Save Observation
-              </Button>
-              <Button 
-                variant="outline" 
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-800">Add New Observation</h3>
+              <Button
+                variant="outline"
                 onClick={() => setShowNewObservation(false)}
+                className="text-gray-500 hover:text-gray-700"
               >
-                Cancel
+                ✕ Close
               </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Observation Type
+                </label>
+                <Select 
+                  value={newObservation.observationType} 
+                  onValueChange={(value) => setNewObservation(prev => ({
+                    ...prev,
+                    observationType: value
+                  }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select observation type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="strategy">Strategy Use</SelectItem>
+                    <SelectItem value="thinking">Mathematical Thinking</SelectItem>
+                    <SelectItem value="communication">Communication</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fact Area
+                </label>
+                <Select 
+                  value={newObservation.factArea} 
+                  onValueChange={(value) => setNewObservation(prev => ({
+                    ...prev,
+                    factArea: value
+                  }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select fact area..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FACT_AREAS.map((area) => (
+                      <SelectItem key={area} value={area}>
+                        {area}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Learning Phase
+                </label>
+                <Select 
+                  value={newObservation.phase} 
+                  onValueChange={(value) => setNewObservation(prev => ({
+                    ...prev,
+                    phase: value
+                  }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select learning phase..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEARNING_PHASES.map((phase) => (
+                      <SelectItem key={phase} value={phase.toLowerCase().replace(' phase', '')}>
+                        {phase}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Observation Details
+                </label>
+                <textarea
+                  className="w-full p-3 border rounded-lg resize-none"
+                  rows={4}
+                  placeholder="Describe what you observed about the student's thinking, strategy use, or mathematical understanding..."
+                  value={newObservation.content}
+                  onChange={(e) => setNewObservation(prev => ({
+                    ...prev,
+                    content: e.target.value
+                  }))}
+                />
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <Button 
+                  onClick={handleSubmitObservation} 
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={!newObservation.content || !newObservation.factArea || !newObservation.phase || !newObservation.observationType}
+                >
+                  Save Observation
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowNewObservation(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           </div>
         </div>
