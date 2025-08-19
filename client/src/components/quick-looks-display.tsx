@@ -251,10 +251,16 @@ export function QuickLooksDisplay({ onComplete, studentId = "student-1", enableT
         <div className="grid lg:grid-cols-2 gap-6">
           <div>
             <div className="bg-white rounded-lg p-8 mb-4 min-h-32 flex items-center justify-center border-2 border-dashed border-gray-300">
-              <div className="text-gray-400 text-center">
-                <i className="fas fa-eye-slash text-2xl mb-2"></i>
-                <p className="text-sm">Visual Hidden</p>
-              </div>
+              {showVisual ? (
+                <div className={getArrangementClass()}>
+                  {renderDots()}
+                </div>
+              ) : (
+                <div className="text-gray-400 text-center">
+                  <i className="fas fa-eye-slash text-2xl mb-2"></i>
+                  <p className="text-sm">Visual Hidden</p>
+                </div>
+              )}
             </div>
             <div className="flex justify-center space-x-4">
               <Button 
