@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Eye, Route, Gamepad2, ClipboardCheck, Star, Home } from "lucide-react";
+import { Eye, Route, Gamepad2, ClipboardCheck, Star, Home, Settings } from "lucide-react";
 import { UserSwitcher } from "./user-switcher";
 
 export function Navigation() {
@@ -13,6 +13,7 @@ export function Navigation() {
     { href: "/games", label: "Math Games", icon: Gamepad2 },
     { href: "/assessment", label: "Assessment", icon: ClipboardCheck },
     { href: "/student-rewards", label: "My Avatar & Rewards", icon: Star },
+    { href: "/admin", label: "Admin", icon: Settings },
   ];
 
   return (
