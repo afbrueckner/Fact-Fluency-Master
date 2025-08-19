@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AssessmentObservation } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StrategyInterview } from "./strategy-interview";
 import { PhaseAssessment } from "./phase-assessment";
 import { AssessmentAnalytics } from "./assessment-analytics";
@@ -16,6 +17,36 @@ interface AssessmentToolsProps {
     phase: string;
   }) => void;
 }
+
+// Predefined fact areas for consistent data entry
+const FACT_AREAS = [
+  "Addition Facts to 5",
+  "Addition Facts to 10", 
+  "Addition Facts to 20",
+  "Doubles Facts (1+1, 2+2, etc.)",
+  "Doubles Plus One (6+7, 8+9, etc.)",
+  "Make 10 Strategy Facts",
+  "Near Doubles Facts",
+  "Addition with Three Addends",
+  "Two-digit Addition Facts",
+  "2s Multiplication Facts",
+  "5s Multiplication Facts", 
+  "10s Multiplication Facts",
+  "Square Facts (2x2, 3x3, etc.)",
+  "3s Multiplication Facts",
+  "4s Multiplication Facts",
+  "6s Multiplication Facts", 
+  "7s Multiplication Facts",
+  "8s Multiplication Facts",
+  "9s Multiplication Facts",
+  "Related Division Facts"
+];
+
+const LEARNING_PHASES = [
+  "Counting Phase",
+  "Deriving Phase", 
+  "Mastery Phase"
+];
 
 export function AssessmentTools({ observations, onAddObservation }: AssessmentToolsProps) {
   const [showNewObservation, setShowNewObservation] = useState(false);
@@ -208,35 +239,48 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Fact Area
               </label>
-              <input
-                type="text"
-                className="w-full p-2 border rounded-lg"
-                placeholder="e.g., Addition doubles, Multiplication 5s"
-                value={newObservation.factArea}
-                onChange={(e) => setNewObservation(prev => ({
+              <Select 
+                value={newObservation.factArea} 
+                onValueChange={(value) => setNewObservation(prev => ({
                   ...prev,
-                  factArea: e.target.value
+                  factArea: value
                 }))}
-              />
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select fact area..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {FACT_AREAS.map((area) => (
+                    <SelectItem key={area} value={area}>
+                      {area}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phase
+                Learning Phase
               </label>
-              <select
-                className="w-full p-2 border rounded-lg"
-                value={newObservation.phase}
-                onChange={(e) => setNewObservation(prev => ({
+              <Select 
+                value={newObservation.phase} 
+                onValueChange={(value) => setNewObservation(prev => ({
                   ...prev,
-                  phase: e.target.value
+                  phase: value
                 }))}
               >
-                <option value="">Select phase...</option>
-                <option value="counting">Counting</option>
-                <option value="deriving">Deriving</option>
-                <option value="mastery">Mastery</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select learning phase..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEARNING_PHASES.map((phase) => (
+                    <SelectItem key={phase} value={phase.toLowerCase().replace(' phase', '')}>
+                      {phase}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>

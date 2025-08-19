@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PhaseAssessmentProps {
   onComplete: (results: PhaseAssessmentResults) => void;
@@ -22,6 +23,34 @@ interface PhaseIndicator {
   observed: boolean;
   weight: number;
 }
+
+// Predefined fact areas for consistent data entry
+const FACT_AREAS = {
+  addition: [
+    "Addition Facts to 5",
+    "Addition Facts to 10", 
+    "Addition Facts to 20",
+    "Doubles Facts (1+1, 2+2, etc.)",
+    "Doubles Plus One (6+7, 8+9, etc.)",
+    "Make 10 Strategy Facts",
+    "Near Doubles Facts",
+    "Addition with Three Addends",
+    "Two-digit Addition Facts"
+  ],
+  multiplication: [
+    "2s Multiplication Facts",
+    "5s Multiplication Facts", 
+    "10s Multiplication Facts",
+    "Square Facts (2x2, 3x3, etc.)",
+    "3s Multiplication Facts",
+    "4s Multiplication Facts",
+    "6s Multiplication Facts", 
+    "7s Multiplication Facts",
+    "8s Multiplication Facts",
+    "9s Multiplication Facts",
+    "Related Division Facts"
+  ]
+};
 
 const PHASE_INDICATORS = {
   addition: [
@@ -232,13 +261,18 @@ export function PhaseAssessment({ onComplete, onCancel }: PhaseAssessmentProps) 
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Specific Fact Area
               </label>
-              <input
-                type="text"
-                value={factArea}
-                onChange={(e) => setFactArea(e.target.value)}
-                className="w-full p-3 border rounded-lg"
-                placeholder="e.g., Doubles facts, 5s multiplication, Addition to 20"
-              />
+              <Select value={factArea} onValueChange={setFactArea}>
+                <SelectTrigger className="w-full p-3">
+                  <SelectValue placeholder="Select a specific fact area to assess..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {FACT_AREAS[operation].map((area) => (
+                    <SelectItem key={area} value={area}>
+                      {area}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
