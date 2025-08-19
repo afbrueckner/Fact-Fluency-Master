@@ -10,7 +10,7 @@ export function Navigation() {
     { href: "/quick-looks", label: "Quick Looks", icon: Eye },
     { href: "/learning-path", label: "Learning Path", icon: Route },
     { href: "/games", label: "Math Games", icon: Gamepad2 },
-    { href: "/assessment", label: "Self Assessment", icon: ClipboardCheck },
+    { href: "/assessment", label: "Assessment", icon: ClipboardCheck },
     { href: "/student-rewards", label: "My Avatar & Rewards", icon: Star },
   ];
 
