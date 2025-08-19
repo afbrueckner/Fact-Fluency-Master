@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -223,6 +224,7 @@ export function PersonalizedLearningPath({ studentId }: PersonalizedLearningPath
 }
 
 function RecommendationCard({ recommendation }: { recommendation: LearningPathRecommendation }) {
+  const [, setLocation] = useLocation();
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'bg-red-50 border-red-200 text-red-800';
@@ -239,6 +241,16 @@ function RecommendationCard({ recommendation }: { recommendation: LearningPathRe
       case 'low': return '📝';
       default: return '📋';
     }
+  };
+
+  const handleStartPractice = () => {
+    // Navigate to games page to start practicing
+    setLocation('/games');
+  };
+
+  const handleLearnMore = () => {
+    // Navigate to assessment page for more detailed analysis
+    setLocation('/assessment');
   };
 
   return (
@@ -278,10 +290,10 @@ function RecommendationCard({ recommendation }: { recommendation: LearningPathRe
       )}
       
       <div className="flex gap-2">
-        <Button size="sm" className="text-xs">
+        <Button size="sm" className="text-xs" onClick={handleStartPractice}>
           Start Practice
         </Button>
-        <Button variant="outline" size="sm" className="text-xs">
+        <Button variant="outline" size="sm" className="text-xs" onClick={handleLearnMore}>
           Learn More
         </Button>
       </div>
@@ -290,6 +302,7 @@ function RecommendationCard({ recommendation }: { recommendation: LearningPathRe
 }
 
 function MilestoneCard({ milestone }: { milestone: Milestone }) {
+  const [, setLocation] = useLocation();
   const daysUntilTarget = Math.ceil((milestone.targetDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   
   return (
@@ -313,7 +326,11 @@ function MilestoneCard({ milestone }: { milestone: Milestone }) {
       
       {!milestone.isCompleted && (
         <div className="mt-3">
-          <Button size="sm" className="text-xs w-full">
+          <Button 
+            size="sm" 
+            className="text-xs w-full"
+            onClick={() => setLocation('/games')}
+          >
             Work Toward This Goal
           </Button>
         </div>
