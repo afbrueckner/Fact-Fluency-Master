@@ -32,7 +32,10 @@ export default function QuickLooks() {
       accuracy: boolean;
       strategy: string;
     }) => {
-      return apiRequest("/api/students/student-1/quick-looks", "POST", sessionData);
+      return apiRequest("/api/students/student-1/quick-looks", {
+        method: "POST",
+        body: sessionData
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/students/student-1/quick-looks"] });
