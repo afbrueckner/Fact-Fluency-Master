@@ -9,14 +9,6 @@ import { GameCard } from "@/components/game-card";
 import { Student, StudentProgress, FactCategory, Game } from "@shared/schema";
 
 export default function Dashboard() {
-  // Default student for demo
-  const defaultStudent = {
-    id: "student-1",
-    name: "Alex Rodriguez",
-    grade: 6,
-    section: "A",
-    initials: "AR"
-  };
 
   const { data: progress = [] } = useQuery<StudentProgress[]>({
     queryKey: ["/api/students/student-1/progress"],
@@ -40,7 +32,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header student={defaultStudent} />
+      <Header />
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
