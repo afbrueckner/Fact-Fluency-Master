@@ -54,6 +54,9 @@ Preferred communication style: Simple, everyday language.
 - **Comprehensive Self-Assessment**: Eight distinct assessment types covering all major fact categories with drag-and-drop sorting interface
 
 ### Recent Major Enhancements (August 2025)
+- **Comprehensive Assessment System**: Renamed from "Self Assessment" to "Assessment" to reflect full scope including teacher observations, phase assessments, strategy interviews, and student self-assessments
+- **Data Consistency Improvements**: Implemented standardized dropdown lists for fact areas (Addition Facts to 5/10/20, Doubles Facts, 2s/5s/10s Multiplication, etc.) and learning phases (Counting/Deriving/Mastery) to ensure consistent data collection over time
+- **Streamlined Observation Tools**: Removed redundant observation forms, consolidated into single modal interface with improved UX and form validation
 - **Expanded Self-Assessment System**: Added comprehensive suite of eight assessment types:
   - Addition & Subtraction Facts: Foundational Addition, Foundational Subtraction, Derived Addition, Derived Subtraction
   - Multiplication & Division Facts: Foundational Multiplication (2s, 5s, 10s, squares), Derived Multiplication (doubling, near squares, break apart), Derived Division
