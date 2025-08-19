@@ -29,7 +29,10 @@ export default function Assessment() {
       factArea: string;
       phase: string;
     }) => {
-      return apiRequest("POST", "/api/students/student-1/observations", observation);
+      return apiRequest("/api/students/student-1/observations", {
+        method: "POST",
+        body: JSON.stringify({ ...observation, studentId: "student-1" })
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/students/student-1/observations"] });

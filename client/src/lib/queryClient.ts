@@ -23,6 +23,7 @@ const apiRouteMap: Record<string, (params?: any) => Promise<any>> = {
   
   // Observation endpoints
   '/api/observations/student-1': () => mockApi.getObservations('student-1'),
+  '/api/students/student-1/observations': () => mockApi.getObservations('student-1'),
   
   // Static data endpoints
   '/api/reward-items': () => mockApi.getRewardItems(),
@@ -87,6 +88,11 @@ export async function apiRequest(url: string, options: RequestInit = {}) {
   
   // Handle POST requests for observations
   if (url === '/api/observations' && method === 'POST') {
+    return await mockApi.createObservation(body);
+  }
+  
+  // Handle POST requests for student observations
+  if (url === '/api/students/student-1/observations' && method === 'POST') {
     return await mockApi.createObservation(body);
   }
   

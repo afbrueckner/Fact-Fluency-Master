@@ -274,7 +274,7 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
       <div>
         <h4 className="font-medium text-gray-800 mb-3">Recent Observations</h4>
         <div className="space-y-3">
-          {observations.slice(0, 5).map((observation) => (
+          {observations && observations.slice(0, 5).map((observation) => (
             <div key={observation.id} className="bg-white rounded-lg p-3 border border-gray-200">
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
@@ -293,7 +293,7 @@ export function AssessmentTools({ observations, onAddObservation }: AssessmentTo
             </div>
           ))}
           
-          {observations.length === 0 && (
+          {(!observations || observations.length === 0) && (
             <div className="text-center py-8 text-gray-500">
               <i className="fas fa-clipboard-list text-3xl mb-2"></i>
               <p>No observations yet. Start by adding your first observation!</p>
