@@ -9,6 +9,7 @@ import QuickLooks from "@/pages/quick-looks";
 import Games from "@/pages/games";
 import Assessment from "@/pages/assessment";
 import StudentRewards from "@/pages/student-rewards";
+import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/games" component={Games} />
       <Route path="/assessment" component={Assessment} />
       <Route path="/student-rewards" component={StudentRewards} />
+      <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );
