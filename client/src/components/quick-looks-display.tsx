@@ -13,6 +13,7 @@ interface QuickLooksDisplayProps {
 export function QuickLooksDisplay({ onComplete, studentId = "student-1", enableTeacherMode = false }: QuickLooksDisplayProps) {
   const [currentStep, setCurrentStep] = useState<"visual" | "discussion" | "teacher-observations" | "complete">("visual");
   const [showVisual, setShowVisual] = useState(true);
+  const [showAgainDisabled, setShowAgainDisabled] = useState(false);
   const [responses, setResponses] = useState({
     visualDescription: "",
     strategy: "",
@@ -70,8 +71,12 @@ export function QuickLooksDisplay({ onComplete, studentId = "student-1", enableT
   }, [currentStep]);
 
   const handleShowAgain = () => {
+    setShowAgainDisabled(true);
     setShowVisual(true);
-    setTimeout(() => setShowVisual(false), 2000);
+    setTimeout(() => {
+      setShowVisual(false);
+      setShowAgainDisabled(false);
+    }, 2000);
   };
 
   const handleComplete = () => {
@@ -256,8 +261,10 @@ export function QuickLooksDisplay({ onComplete, studentId = "student-1", enableT
                 variant="outline"
                 onClick={handleShowAgain}
                 className="px-4 py-2"
+                disabled={showAgainDisabled}
               >
-                <i className="fas fa-redo mr-2"></i>Show Again
+                <i className="fas fa-redo mr-2"></i>
+                {showAgainDisabled ? 'Showing...' : 'Show Again'}
               </Button>
             </div>
           </div>
