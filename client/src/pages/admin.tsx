@@ -22,6 +22,8 @@ import {
   Target,
   Settings
 } from "lucide-react";
+import { Header } from "@/components/header";
+import { Navigation } from "@/components/navigation";
 import { getAllStudents, addStudent, removeStudent, getCurrentStudentId, setCurrentStudentId } from "@/lib/localStorage";
 import type { Student } from "@shared/schema";
 
@@ -238,8 +240,11 @@ accuracy, efficiency, flexibility, and appropriate strategy use.
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <Navigation />
+      
+      <div className="max-w-7xl mx-auto p-6">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Settings className="h-8 w-8 text-primary-600" />
