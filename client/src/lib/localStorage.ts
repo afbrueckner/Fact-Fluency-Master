@@ -19,8 +19,15 @@ const STORAGE_KEYS = {
   REWARDS: 'math-fluency-rewards',
   AVATAR: 'math-fluency-avatar',
   TRANSACTIONS: 'math-fluency-transactions',
-  OBSERVATIONS: 'math-fluency-observations'
+  OBSERVATIONS: 'math-fluency-observations',
+  STUDENTS_LIST: 'math-fluency-students-list',
+  CURRENT_STUDENT: 'math-fluency-current-student'
 } as const;
+
+// Generate scoped storage key for multi-user support
+function getScopedKey(baseKey: string, studentId: string): string {
+  return `${baseKey}-${studentId}`;
+}
 
 // Helper functions
 export function getFromStorage<T>(key: string, defaultValue: T): T {
@@ -40,28 +47,89 @@ export function setInStorage<T>(key: string, value: T): void {
   }
 }
 
-// Student data
+// Current student management
+export function getCurrentStudentId(): string {
+  return getFromStorage(STORAGE_KEYS.CURRENT_STUDENT, "student-1");
+}
+
+export function setCurrentStudentId(studentId: string): void {
+  setInStorage(STORAGE_KEYS.CURRENT_STUDENT, studentId);
+}
+
+// Students list management
+export function getAllStudents(): Student[] {
+  return getFromStorage(STORAGE_KEYS.STUDENTS_LIST, [
+    {
+      id: "student-1",
+      name: "Alex Rodriguez",
+      grade: 6,
+      section: "A",
+      initials: "AR",
+      createdAt: new Date()
+    }
+  ]);
+}
+
+export function addStudent(student: Student): void {
+  const students = getAllStudents();
+  const existingIndex = students.findIndex(s => s.id === student.id);
+  
+  if (existingIndex >= 0) {
+    students[existingIndex] = student;
+  } else {
+    students.push(student);
+  }
+  
+  setInStorage(STORAGE_KEYS.STUDENTS_LIST, students);
+}
+
+export function removeStudent(studentId: string): void {
+  const students = getAllStudents().filter(s => s.id !== studentId);
+  setInStorage(STORAGE_KEYS.STUDENTS_LIST, students);
+  
+  // Clean up student data
+  const keys = Object.values(STORAGE_KEYS);
+  keys.forEach(key => {
+    if (key !== STORAGE_KEYS.STUDENTS_LIST && key !== STORAGE_KEYS.CURRENT_STUDENT) {
+      localStorage.removeItem(getScopedKey(key, studentId));
+    }
+  });
+  
+  // Switch to another student if current was deleted
+  const currentId = getCurrentStudentId();
+  if (currentId === studentId && students.length > 0) {
+    setCurrentStudentId(students[0].id);
+  }
+}
+
+// Student data (scoped to current user)
 export function getStudent(): Student {
-  return getFromStorage(STORAGE_KEYS.STUDENT, {
-    id: "student-1",
+  const currentId = getCurrentStudentId();
+  const students = getAllStudents();
+  const student = students.find(s => s.id === currentId);
+  
+  return student || {
+    id: currentId,
     name: "Alex Rodriguez",
     grade: 6,
     section: "A",
     initials: "AR",
     createdAt: new Date()
-  });
+  };
 }
 
 export function setStudent(student: Student): void {
-  setInStorage(STORAGE_KEYS.STUDENT, student);
+  addStudent(student);
 }
 
-// Progress data
+// Progress data (scoped to current user)
 export function getProgress(): StudentProgress[] {
-  return getFromStorage(STORAGE_KEYS.PROGRESS, [
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.PROGRESS, currentId);
+  return getFromStorage(key, [
     {
       id: "progress-1",
-      studentId: "student-1",
+      studentId: currentId,
       factCategoryId: "add-plus-minus-1-2",
       phase: "counting",
       accuracy: 75,
@@ -75,10 +143,13 @@ export function getProgress(): StudentProgress[] {
 }
 
 export function setProgress(progress: StudentProgress[]): void {
-  setInStorage(STORAGE_KEYS.PROGRESS, progress);
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.PROGRESS, currentId);
+  setInStorage(key, progress);
 }
 
 export function updateProgress(categoryId: string, updates: Partial<StudentProgress>): void {
+  const currentId = getCurrentStudentId();
   const progress = getProgress();
   const index = progress.findIndex(p => p.factCategoryId === categoryId);
   
@@ -87,7 +158,7 @@ export function updateProgress(categoryId: string, updates: Partial<StudentProgr
   } else {
     progress.push({
       id: `progress-${Date.now()}`,
-      studentId: "student-1",
+      studentId: currentId,
       factCategoryId: categoryId,
       phase: "counting",
       accuracy: 0,
@@ -103,11 +174,13 @@ export function updateProgress(categoryId: string, updates: Partial<StudentProgr
   setProgress(progress);
 }
 
-// Points data
+// Points data (scoped to current user)
 export function getPoints(): StudentPoints {
-  return getFromStorage(STORAGE_KEYS.POINTS, {
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.POINTS, currentId);
+  return getFromStorage(key, {
     id: "points-1",
-    studentId: "student-1",
+    studentId: currentId,
     totalPoints: 150,
     spentPoints: 0,
     availablePoints: 150,
@@ -116,7 +189,9 @@ export function getPoints(): StudentPoints {
 }
 
 export function setPoints(points: StudentPoints): void {
-  setInStorage(STORAGE_KEYS.POINTS, points);
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.POINTS, currentId);
+  setInStorage(key, points);
 }
 
 export function addPoints(amount: number, reason: string): void {
@@ -149,39 +224,48 @@ export function spendPoints(amount: number, reason: string): boolean {
   return false;
 }
 
-// Transactions
+// Transactions (scoped to current user)
 export function getTransactions(): PointTransaction[] {
-  return getFromStorage(STORAGE_KEYS.TRANSACTIONS, []);
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.TRANSACTIONS, currentId);
+  return getFromStorage(key, []);
 }
 
 export function addTransaction(points: number, reason: string): void {
+  const currentId = getCurrentStudentId();
   const transactions = getTransactions();
   transactions.unshift({
     id: `transaction-${Date.now()}`,
-    studentId: "student-1",
+    studentId: currentId,
     category: points > 0 ? "earned" : "spent",
     points,
     reason,
     metadata: {},
     createdAt: new Date()
   });
-  setInStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
+  const key = getScopedKey(STORAGE_KEYS.TRANSACTIONS, currentId);
+  setInStorage(key, transactions);
 }
 
-// Rewards
+// Rewards (scoped to current user)
 export function getStudentRewards(): StudentReward[] {
-  return getFromStorage(STORAGE_KEYS.REWARDS, []);
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.REWARDS, currentId);
+  return getFromStorage(key, []);
 }
 
 export function setStudentRewards(rewards: StudentReward[]): void {
-  setInStorage(STORAGE_KEYS.REWARDS, rewards);
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.REWARDS, currentId);
+  setInStorage(key, rewards);
 }
 
 export function unlockReward(rewardItemId: string): StudentReward {
+  const currentId = getCurrentStudentId();
   const rewards = getStudentRewards();
   const newReward: StudentReward = {
     id: `reward-${Date.now()}`,
-    studentId: "student-1",
+    studentId: currentId,
     rewardItemId,
     isEquipped: false,
     unlockedAt: new Date()
@@ -213,11 +297,13 @@ export function equipReward(rewardItemId: string, category: string): void {
   setStudentRewards(rewards);
 }
 
-// Avatar
+// Avatar (scoped to current user)
 export function getAvatar(): StudentAvatar {
-  return getFromStorage(STORAGE_KEYS.AVATAR, {
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.AVATAR, currentId);
+  return getFromStorage(key, {
     id: "avatar-1",
-    studentId: "student-1",
+    studentId: currentId,
     avatarType: "emoji",
     baseColor: "#4F46E5",
     accessories: {},
@@ -230,22 +316,28 @@ export function getAvatar(): StudentAvatar {
 }
 
 export function setAvatar(avatar: StudentAvatar): void {
-  setInStorage(STORAGE_KEYS.AVATAR, avatar);
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.AVATAR, currentId);
+  setInStorage(key, avatar);
 }
 
-// Observations - removed since QuickLookObservation type doesn't exist
+// Observations (scoped to current user)
 export function getObservations(): any[] {
-  return getFromStorage(STORAGE_KEYS.OBSERVATIONS, []);
+  const currentId = getCurrentStudentId();
+  const key = getScopedKey(STORAGE_KEYS.OBSERVATIONS, currentId);
+  return getFromStorage(key, []);
 }
 
 export function addObservation(observation: any): void {
+  const currentId = getCurrentStudentId();
   const observations = getObservations();
   observations.unshift({
     ...observation,
     id: `obs-${Date.now()}`,
     createdAt: new Date()
   });
-  setInStorage(STORAGE_KEYS.OBSERVATIONS, observations);
+  const key = getScopedKey(STORAGE_KEYS.OBSERVATIONS, currentId);
+  setInStorage(key, observations);
 }
 
 // Static data (these don't change, so we can define them here)

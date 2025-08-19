@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Eye, Route, Gamepad2, ClipboardCheck, Star, Home } from "lucide-react";
+import { UserSwitcher } from "./user-switcher";
 
 export function Navigation() {
   const [location] = useLocation();
@@ -40,6 +41,9 @@ export function Navigation() {
                 );
               })}
             </div>
+          </div>
+          <div className="flex items-center">
+            <UserSwitcher />
           </div>
         </div>
       </div>
