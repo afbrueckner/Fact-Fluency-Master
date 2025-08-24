@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ThreeDiceTakeProps {
   onComplete: (score: number, accuracy: number, strategies: string[]) => void;
@@ -34,6 +35,14 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
   const [showValidation, setShowValidation] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
   const [displayDice, setDisplayDice] = useState<number[]>([1, 1, 1]);
+  
+  // Structured equation input
+  const [num1, setNum1] = useState("");
+  const [operator1, setOperator1] = useState("");
+  const [num2, setNum2] = useState("");
+  const [operator2, setOperator2] = useState("");
+  const [num3, setNum3] = useState("");
+  const [result, setResult] = useState("");
 
   // Initialize gameboard with numbers 1-36
   useEffect(() => {
@@ -55,6 +64,14 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
     setTargetNumber(null);
     setFeedback("");
     setShowValidation(false);
+    
+    // Clear structured input
+    setNum1("");
+    setOperator1("");
+    setNum2("");
+    setOperator2("");
+    setNum3("");
+    setResult("");
 
     // Start the rolling animation
     const rollInterval = setInterval(() => {
@@ -117,6 +134,64 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
       };
     } catch (error) {
       return { valid: false, result: null, usesAllDice: false };
+    }
+  };
+
+  const validateStructuredMove = () => {
+    // Check if all fields are filled
+    if (!num1 || !operator1 || !num2 || !operator2 || !num3 || !result) {
+      setFeedback("Please fill in all equation fields.");
+      return;
+    }
+
+    // Convert inputs to numbers
+    const n1 = parseInt(num1);
+    const n2 = parseInt(num2);
+    const n3 = parseInt(num3);
+    const expectedResult = parseInt(result);
+
+    // Check if numbers are valid dice values
+    const inputNumbers = [n1, n2, n3].sort((a, b) => a - b);
+    const sortedDice = [...dice].sort((a, b) => a - b);
+    
+    const usesAllDice = inputNumbers.length === 3 && 
+      inputNumbers.every((num, index) => num === sortedDice[index]);
+
+    if (!usesAllDice) {
+      setFeedback("You must use all three dice values exactly once.");
+      return;
+    }
+
+    // Build equation string and evaluate
+    const equation = `${n1} ${operator1} ${n2} ${operator2} ${n3}`;
+    
+    try {
+      // Convert × and ÷ to * and /
+      const jsEquation = equation.replace(/×/g, '*').replace(/÷/g, '/');
+      const calculatedResult = Function('"use strict"; return (' + jsEquation + ')')();
+      
+      if (!Number.isInteger(calculatedResult) || calculatedResult !== expectedResult) {
+        setFeedback(`Your equation ${equation} = ${calculatedResult}, not ${expectedResult}. Please check your math.`);
+        return;
+      }
+
+      if (expectedResult < 1 || expectedResult > 36) {
+        setFeedback("Result must be between 1 and 36.");
+        return;
+      }
+
+      const targetCell = gameBoard.find(cell => cell.number === expectedResult);
+      if (!targetCell || targetCell.claimed) {
+        setFeedback(`Number ${expectedResult} is not available on the board.`);
+        return;
+      }
+
+      setPlayerEquation(equation);
+      setTargetNumber(expectedResult);
+      setShowValidation(true);
+      setFeedback(`Valid equation! ${equation} = ${expectedResult}. Confirm to claim this number.`);
+    } catch (error) {
+      setFeedback("Invalid equation. Please check your operators and numbers.");
     }
   };
 
@@ -433,28 +508,111 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
             </Button>
           </div>
 
-          {/* Equation Input */}
+          {/* Structured Equation Input */}
           <div className="text-center mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Create Your Equation</h3>
             <p className="text-sm text-gray-600 mb-3">
-              Use all three dice with +, -, ×, ÷ and parentheses to make a number on the board
+              Use all three dice values: {displayDice.join(", ")}
             </p>
-            <div className="flex justify-center space-x-2 mb-4">
+            
+            {/* Equation Builder */}
+            <div className="flex justify-center items-center space-x-2 mb-4 flex-wrap">
+              {/* First Number */}
               <Input
-                type="text"
-                value={playerEquation}
-                onChange={(e) => setPlayerEquation(e.target.value)}
-                placeholder={`Use ${displayDice[0]}, ${displayDice[1]}, ${displayDice[2]}`}
-                className="text-center max-w-xs"
-                onKeyPress={(e) => e.key === 'Enter' && validateMove()}
+                type="number"
+                value={num1}
+                onChange={(e) => setNum1(e.target.value)}
+                className="w-16 h-12 text-center text-lg font-bold"
+                placeholder="?"
                 disabled={isRolling}
+                min="1"
+                max="6"
               />
+              
+              {/* First Operator */}
+              <Select value={operator1} onValueChange={setOperator1} disabled={isRolling}>
+                <SelectTrigger className="w-16 h-12 text-center text-lg">
+                  <SelectValue placeholder="?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="+">+</SelectItem>
+                  <SelectItem value="-">−</SelectItem>
+                  <SelectItem value="×">×</SelectItem>
+                  <SelectItem value="÷">÷</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Second Number */}
+              <Input
+                type="number"
+                value={num2}
+                onChange={(e) => setNum2(e.target.value)}
+                className="w-16 h-12 text-center text-lg font-bold"
+                placeholder="?"
+                disabled={isRolling}
+                min="1"
+                max="6"
+              />
+              
+              {/* Second Operator */}
+              <Select value={operator2} onValueChange={setOperator2} disabled={isRolling}>
+                <SelectTrigger className="w-16 h-12 text-center text-lg">
+                  <SelectValue placeholder="?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="+">+</SelectItem>
+                  <SelectItem value="-">−</SelectItem>
+                  <SelectItem value="×">×</SelectItem>
+                  <SelectItem value="÷">÷</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Third Number */}
+              <Input
+                type="number"
+                value={num3}
+                onChange={(e) => setNum3(e.target.value)}
+                className="w-16 h-12 text-center text-lg font-bold"
+                placeholder="?"
+                disabled={isRolling}
+                min="1"
+                max="6"
+              />
+              
+              {/* Equals Sign */}
+              <div className="w-12 h-12 flex items-center justify-center text-2xl font-bold text-gray-600">
+                =
+              </div>
+              
+              {/* Result */}
+              <Input
+                type="number"
+                value={result}
+                onChange={(e) => setResult(e.target.value)}
+                className="w-20 h-12 text-center text-lg font-bold border-2 border-green-300"
+                placeholder="?"
+                disabled={isRolling}
+                min="1"
+                max="36"
+              />
+            </div>
+
+            {/* Validation Button */}
+            <div className="mb-4">
               {!showValidation ? (
-                <Button onClick={validateMove} disabled={!playerEquation.trim() || isRolling}>
-                  Validate
+                <Button 
+                  onClick={validateStructuredMove} 
+                  disabled={!num1 || !operator1 || !num2 || !operator2 || !num3 || !result || isRolling}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  Validate Equation
                 </Button>
               ) : (
-                <Button onClick={executePlayerMove} className="bg-green-500 hover:bg-green-600" disabled={isRolling}>
+                <Button 
+                  onClick={executePlayerMove} 
+                  className="bg-green-500 hover:bg-green-600" 
+                  disabled={isRolling}
+                >
                   Confirm Move
                 </Button>
               )}
@@ -475,9 +633,10 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <h4 className="text-sm font-semibold text-yellow-800 mb-2">💡 Strategy Tips</h4>
             <div className="text-sm text-yellow-700 space-y-1">
-              <p>• Look for numbers that will give you adjacent bonuses</p>
-              <p>• Try different operation combinations: (a + b) × c, a × (b + c), etc.</p>
-              <p>• Remember you must use all three dice exactly once</p>
+              <p>• Look for numbers that will give you adjacent bonuses on the board</p>
+              <p>• Try different operation combinations: addition, subtraction, multiplication, division</p>
+              <p>• Use each dice value exactly once in the three number boxes</p>
+              <p>• Calculate your result and enter it in the final box</p>
             </div>
           </div>
         </>
