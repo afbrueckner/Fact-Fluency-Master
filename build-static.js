@@ -1,12 +1,21 @@
 // Build script for static deployment without backend
 import { build } from 'vite';
 import path from 'path';
+import react from '@vitejs/plugin-react';
 
 async function buildStatic() {
   try {
     // Build the client for static hosting
     await build({
+      plugins: [react()],
       root: './client',
+      resolve: {
+        alias: {
+          "@": path.resolve(process.cwd(), "client", "src"),
+          "@shared": path.resolve(process.cwd(), "shared"),
+          "@assets": path.resolve(process.cwd(), "attached_assets"),
+        },
+      },
       build: {
         outDir: '../dist',
         emptyOutDir: true,
