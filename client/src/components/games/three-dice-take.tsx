@@ -32,6 +32,8 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
   const [moveHistory, setMoveHistory] = useState<Move[]>([]);
   const [feedback, setFeedback] = useState("");
   const [showValidation, setShowValidation] = useState(false);
+  const [isRolling, setIsRolling] = useState(false);
+  const [displayDice, setDisplayDice] = useState<number[]>([1, 1, 1]);
 
   // Initialize gameboard with numbers 1-36
   useEffect(() => {
@@ -48,16 +50,34 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
   }, []);
 
   const rollDice = () => {
-    const newDice = [
-      Math.floor(Math.random() * 6) + 1,
-      Math.floor(Math.random() * 6) + 1,
-      Math.floor(Math.random() * 6) + 1
-    ];
-    setDice(newDice);
+    setIsRolling(true);
     setPlayerEquation("");
     setTargetNumber(null);
     setFeedback("");
     setShowValidation(false);
+
+    // Start the rolling animation
+    const rollInterval = setInterval(() => {
+      const randomDice = [
+        Math.floor(Math.random() * 6) + 1,
+        Math.floor(Math.random() * 6) + 1,
+        Math.floor(Math.random() * 6) + 1
+      ];
+      setDisplayDice(randomDice);
+    }, 100); // Change values every 100ms
+
+    // Stop after 1.5 seconds and set final values
+    setTimeout(() => {
+      clearInterval(rollInterval);
+      const finalDice = [
+        Math.floor(Math.random() * 6) + 1,
+        Math.floor(Math.random() * 6) + 1,
+        Math.floor(Math.random() * 6) + 1
+      ];
+      setDice(finalDice);
+      setDisplayDice(finalDice);
+      setIsRolling(false);
+    }, 1500);
   };
 
   const evaluateEquation = (equation: string, diceValues: number[]): { valid: boolean; result: number | null; usesAllDice: boolean } => {
@@ -397,17 +417,19 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
           <div className="text-center mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Your Dice</h3>
             <div className="flex justify-center space-x-4 mb-4">
-              {dice.map((die, index) => (
+              {displayDice.map((die, index) => (
                 <div
                   key={index}
-                  className="w-16 h-16 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center text-2xl font-bold shadow-md"
+                  className={`w-16 h-16 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center text-2xl font-bold shadow-md transition-all duration-100 ${
+                    isRolling ? 'animate-bounce border-blue-400 bg-blue-50 scale-110' : ''
+                  }`}
                 >
                   {die}
                 </div>
               ))}
             </div>
-            <Button onClick={rollDice} variant="outline" size="sm">
-              Roll Again
+            <Button onClick={rollDice} variant="outline" size="sm" disabled={isRolling}>
+              {isRolling ? 'Rolling...' : 'Roll Again'}
             </Button>
           </div>
 
@@ -422,16 +444,17 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
                 type="text"
                 value={playerEquation}
                 onChange={(e) => setPlayerEquation(e.target.value)}
-                placeholder={`Use ${dice[0]}, ${dice[1]}, ${dice[2]}`}
+                placeholder={`Use ${displayDice[0]}, ${displayDice[1]}, ${displayDice[2]}`}
                 className="text-center max-w-xs"
                 onKeyPress={(e) => e.key === 'Enter' && validateMove()}
+                disabled={isRolling}
               />
               {!showValidation ? (
-                <Button onClick={validateMove} disabled={!playerEquation.trim()}>
+                <Button onClick={validateMove} disabled={!playerEquation.trim() || isRolling}>
                   Validate
                 </Button>
               ) : (
-                <Button onClick={executePlayerMove} className="bg-green-500 hover:bg-green-600">
+                <Button onClick={executePlayerMove} className="bg-green-500 hover:bg-green-600" disabled={isRolling}>
                   Confirm Move
                 </Button>
               )}
@@ -465,10 +488,12 @@ export function ThreeDiceTake({ onComplete, onExit }: ThreeDiceTakeProps) {
           <div className="animate-pulse">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Computer is thinking...</h3>
             <div className="flex justify-center space-x-4 mb-4">
-              {dice.map((die, index) => (
+              {displayDice.map((die, index) => (
                 <div
                   key={index}
-                  className="w-16 h-16 bg-red-100 border-2 border-red-300 rounded-lg flex items-center justify-center text-2xl font-bold"
+                  className={`w-16 h-16 bg-red-100 border-2 border-red-300 rounded-lg flex items-center justify-center text-2xl font-bold transition-all duration-100 ${
+                    isRolling ? 'animate-bounce border-red-400 bg-red-50 scale-110' : ''
+                  }`}
                 >
                   {die}
                 </div>
