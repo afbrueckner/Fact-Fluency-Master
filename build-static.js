@@ -20,7 +20,7 @@ async function buildStatic() {
         outDir: '../dist',
         emptyOutDir: true,
       },
-      base: '/MathFactMaster/', // GitHub Pages repository path
+      base: '/Fact-Fluency-Master/', // GitHub Pages repository path
     });
     
     // Create GitHub Pages specific files for SPA routing
