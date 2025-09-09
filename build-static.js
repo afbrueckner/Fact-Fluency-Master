@@ -19,6 +19,14 @@ async function buildStatic() {
       build: {
         outDir: '../dist',
         emptyOutDir: true,
+        // Use esbuild minifier instead of eval-based development transforms
+        minify: 'esbuild',
+        target: 'es2015',
+        rollupOptions: {
+          output: {
+            manualChunks: undefined,
+          },
+        },
       },
       base: '/Fact-Fluency-Master/', // GitHub Pages repository path
     });
