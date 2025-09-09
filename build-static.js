@@ -33,14 +33,10 @@ async function buildStatic() {
     // Create .nojekyll file to prevent Jekyll processing
     await fs.promises.writeFile(`${distPath}/.nojekyll`, '');
     
-    console.log('✅ Static build complete! Ready for hosting on GitHub Pages, Netlify, or Vercel.');
+    console.log('✅ Static build complete! Files ready for GitHub Pages deployment.');
     console.log('📁 Built files are in the ./dist directory');
-    console.log('🔧 Added GitHub Pages SPA support (404.html and .nojekyll)');
-    console.log('');
-    console.log('🚀 Deploy instructions:');
-    console.log('   GitHub Pages: Push to your repo and enable Pages from the dist folder');
-    console.log('   Netlify: Drag and drop the dist folder to netlify.com/drop');
-    console.log('   Vercel: Import your repo and set build output to "dist"');
+    console.log('🔧 Added SPA support (404.html and .nojekyll files)');
+    console.log('🚀 Ready for deployment!');
   } catch (error) {
     console.error('❌ Build failed:', error);
     process.exit(1);
