@@ -25,6 +25,7 @@ async function buildStatic() {
     
     // Create GitHub Pages specific files for SPA routing
     const fs = await import('fs');
+    const pathModule = await import('path');
     const distPath = './dist';
     
     // Copy index.html to 404.html for SPA routing on GitHub Pages
@@ -33,8 +34,24 @@ async function buildStatic() {
     // Create .nojekyll file to prevent Jekyll processing
     await fs.promises.writeFile(`${distPath}/.nojekyll`, '');
     
+    // Copy all files from dist to root directory for GitHub Pages
+    const files = await fs.promises.readdir(distPath, { withFileTypes: true });
+    
+    for (const file of files) {
+      const srcPath = pathModule.join(distPath, file.name);
+      const destPath = file.name;
+      
+      if (file.isDirectory()) {
+        // Copy directory recursively
+        await fs.promises.cp(srcPath, destPath, { recursive: true, force: true });
+      } else {
+        // Copy file
+        await fs.promises.copyFile(srcPath, destPath);
+      }
+    }
+    
     console.log('✅ Static build complete! Files ready for GitHub Pages deployment.');
-    console.log('📁 Built files are in the ./dist directory');
+    console.log('📁 Built files copied to root directory for GitHub Pages');
     console.log('🔧 Added SPA support (404.html and .nojekyll files)');
     console.log('🚀 Ready for deployment!');
   } catch (error) {
