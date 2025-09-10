@@ -42,7 +42,9 @@ export function RacingBears({ onComplete, onExit }: RacingBearsProps) {
 
   const generateNewProblem = () => {
     const problem = problems[Math.floor(Math.random() * problems.length)];
-    const answer = eval(problem);
+    // Safe calculation without eval
+    const [num1, num2] = problem.split('+').map(n => parseInt(n.trim()));
+    const answer = num1 + num2;
     setGameState(prev => ({ ...prev, currentProblem: problem, answer, userAnswer: '' }));
   };
 
