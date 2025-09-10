@@ -28,7 +28,7 @@ async function buildStatic() {
           },
         },
       },
-      base: '/Fact-Fluency-Master/', // GitHub Pages repository path
+      base: './', // Use relative paths for GitHub Pages
     });
     
     // Create GitHub Pages specific files for SPA routing
